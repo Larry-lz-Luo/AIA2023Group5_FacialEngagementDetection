@@ -69,7 +69,9 @@ time.sleep(2.0)
 start = time.time()
 fps = cap.get(cv2.CAP_PROP_FPS)
 print("Frames per second using cv2.CAP_PROP_FPS : {0}".format(fps))
-
+cv2.namedWindow("output", cv2.WINDOW_NORMAL) 
+# Resize the Window
+cv2.resizeWindow("output", 1280, 720)
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -90,15 +92,15 @@ while(True):
         y = y - 10 if y - 10 > 10 else y + 10
         cv2.putText(frame, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
 
-        # 標示FPS
-        end = time.time()
-        cv2.putText(frame, f"FPS: {str(int(1 / (end - start)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+    # 標示FPS
+    end = time.time()
+    cv2.putText(frame, f"FPS: {str(int(1 / (end - start)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
                     (0, 0, 255), 2)
-        start = end
+    start = end
 
-
+    #frame = cv2.resize(frame, (640, 360)) 
     # Display the resulting frame
-    cv2.imshow('preview',frame)
+    cv2.imshow("output",frame)
     # Waits for a user input to quit the application
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
