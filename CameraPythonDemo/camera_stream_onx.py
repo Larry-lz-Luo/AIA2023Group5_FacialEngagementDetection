@@ -53,24 +53,49 @@ while(True):
     faces = faces if faces is not None else []
 
 
-    print(f"faces: {faces}")
+    #print(f"faces: {faces}")
     # 検出した顔のバウンディングボックスとランドマークを描画する
+    fnum=0
+    faceStatus='Right'
+    FrontFacing='Facing'
     for face in faces:
         # バウンディングボックス
         box = list(map(int, face[:4]*ration))
-        print(f"box: {box}")
+        #print(f"box: {box}")
         color = (0, 0, 255)
         thickness = 2
         cv2.rectangle(frame, box, color, thickness, cv2.LINE_AA)
 
         # ランドマーク（右目、左目、鼻、右口角、左口角）
         landmarks = list(map(int, face[4:len(face)-1]*ration))
+        #print(f"landmarks1: {landmarks}")
+        #cacl location
+        # Right eye X 
+        reX=landmarks[0]
+        if(reX<=0):reX=1
+        # Right lip X 
+        rlX=landmarks[6]
+        # noise x
+        nX=landmarks[4]
+        # Left eye X 
+        leX=landmarks[2]
+        if(leX<=0):leX=1
+        # Left lip X 
+        llX=landmarks[8]
+
+        faceFontStatusWeight=abs(1-(nX/reX))-abs(1-(nX/leX))
+        if(faceFontStatusWeight>0): faceStatus='Left'
+        if(abs(faceFontStatusWeight)>0.05): FrontFacing='NotFacing'
+        #print(f"re: {abs(1-(nX/reX))}, le:{abs(1-(nX/leX))}")
+        print(f"faceFontStatusWeight: {faceFontStatusWeight}")
+        #print(f"rl: {rlX/nX}, ll:{llX/nX}")
         landmarks = np.array_split(landmarks, len(landmarks) / 2)
         for landmark in landmarks:
             radius = 5
             thickness = -1
             cv2.circle(frame, landmark, radius, color, thickness, cv2.LINE_AA)
-                
+        
+        #print(f"landmarks2: {landmarks}")       
         # 信頼度
         confidence = face[-1]
         confidence = "{:.2f}".format(confidence)
@@ -79,10 +104,12 @@ while(True):
         scale = 0.5
         thickness = 2
         cv2.putText(frame, confidence, position, font, scale, color, thickness, cv2.LINE_AA)
+        cv2.putText(frame, f'Face:{fnum} , status: {faceStatus}, FrontFacing: {FrontFacing}',  (box[0]+100, box[1] - 10), font, 1, color, thickness, cv2.LINE_AA)
+        fnum=fnum+1
 
     # 標示FPS
     end = time.time()
-    cv2.putText(frame, f"FPS: {str(int(1 / (end - start)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7,
+    cv2.putText(frame, f"FPS: {str(int(1 / (end - start)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0, 0, 255), 2)
     start = end
     # Display the resulting frame
