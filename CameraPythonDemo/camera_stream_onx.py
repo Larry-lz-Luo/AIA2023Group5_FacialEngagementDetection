@@ -3,13 +3,18 @@ import cv2
 import numpy as np
 import time
 import os
-
 new_shape=(640,360)
 # モデルを読み込む
 directory = os.path.dirname(__file__)
 print(f"directory:{directory}")
 weights = os.path.join(directory, "face_detection_yunet_2022mar.onnx")
 face_detector = cv2.FaceDetectorYN_create(weights, "", new_shape)
+
+# 初始化FaceRecognizerSF
+recog_model_path = os.path.join(directory, "face_recognition_sface_2021dec.onnx")
+recognizer = cv2.FaceRecognizerSF.create(recog_model_path, "" )
+
+
 # Open the device at the ID 0
 cap = cv2.VideoCapture(0)
 
@@ -27,6 +32,7 @@ cv2.namedWindow("output", cv2.WINDOW_NORMAL)
 # Resize the Window
 cv2.resizeWindow("output", 640, 360)
 
+feature1=np.array([])
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
@@ -89,7 +95,7 @@ while(True):
         if(faceFontStatusWeight>0): faceStatus='Left'
         if(abs(faceFontStatusWeight)>0.05): FrontFacing='NotFacing'
         #print(f"re: {abs(1-(nX/reX))}, le:{abs(1-(nX/leX))}")
-        print(f"faceFontStatusWeight: {faceFontStatusWeight}")
+        #print(f"faceFontStatusWeight: {faceFontStatusWeight}")
         #print(f"rl: {rlX/nX}, ll:{llX/nX}")
         landmarks = np.array_split(landmarks, len(landmarks) / 2)
         for landmark in landmarks:
@@ -111,6 +117,32 @@ while(True):
         
         fnum=fnum+1
 
+        
+        # 在人脸检测部分的基础上, 对齐检测到的首个人脸(faces[0]), 保存至aligned_face。
+        aligned_face = recognizer.alignCrop(frame, face)
+        # 在上文的基础上, 获取对齐人脸的特征feature。
+        feature2 = recognizer.feature(aligned_face)
+
+        if(feature1.size==0):feature1=feature2
+        #print(f"feature: {feature}")
+        # 在上文的基础上, 比对两张人脸的特征feature1，feature2以确认身份。
+        # 使用consine距离作为指标
+        cosineResult=False
+        cosine_similarity_threshold = 0.363
+        cosine_score = recognizer.match(feature1, feature2, 0) 
+        if cosine_score >= cosine_similarity_threshold: 
+            cosineResult=True
+
+        # 使用normL2距离作为指标
+        normL2Result=False
+        l2_similarity_threshold = 1.128
+        l2_score = recognizer.match(feature1, feature2, 1)
+        if l2_score <= l2_similarity_threshold: 
+            normL2Result=True
+        
+        if(cosineResult&normL2Result):print(f"recognizer: is Same")
+        else:print(f"recognizer: is Not Same")
+    
     # 將FPS值顯示在視頻上
     cv2.putText(frame, f"FPS: {str(int(fps))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0, 0, 255), 2)
