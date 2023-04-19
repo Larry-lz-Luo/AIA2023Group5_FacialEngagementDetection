@@ -27,10 +27,12 @@ cv2.namedWindow("output", cv2.WINDOW_NORMAL)
 # Resize the Window
 cv2.resizeWindow("output", 640, 360)
 
-start = time.time()
 while(True):
     # Capture frame-by-frame
     ret, frame = cap.read()
+
+    # 計算每一幀的處理時間
+    start_time = time.time()
 
      # 画像が3チャンネル以外の場合は3チャンネルに変換する
     channels = 1 if len(frame.shape) == 2 else frame.shape[2]
@@ -104,16 +106,22 @@ while(True):
         scale = 0.5
         thickness = 2
         cv2.putText(frame, confidence, position, font, scale, color, thickness, cv2.LINE_AA)
-        cv2.putText(frame, f'Face:{fnum} , status: {faceStatus}, FrontFacing: {FrontFacing}',  (box[0]+100, box[1] - 10), font, 1, color, thickness, cv2.LINE_AA)
+        cv2.putText(frame, f'Face:{fnum} , status: {faceStatus}',  (box[0]+100, box[1] - 40), font, 1, color, thickness, cv2.LINE_AA)
+        cv2.putText(frame, f'FrontFacing: {FrontFacing}',  (box[0]+100, box[1]-10 ), font, 1, color, thickness, cv2.LINE_AA)
+        
         fnum=fnum+1
 
-    # 標示FPS
-    end = time.time()
-    cv2.putText(frame, f"FPS: {str(int(1 / (end - start)))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1,
+    # 將FPS值顯示在視頻上
+    cv2.putText(frame, f"FPS: {str(int(fps))}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1,
                     (0, 0, 255), 2)
-    start = end
+    
     # Display the resulting frame
     cv2.imshow("output",frame)
+
+    # 計算FPS值
+    end_time = time.time()
+    fps = 1 / (end_time - start_time)
+    
     # Waits for a user input to quit the application
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
