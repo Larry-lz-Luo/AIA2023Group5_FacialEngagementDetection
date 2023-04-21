@@ -119,7 +119,7 @@ while(True):
 
         
         # 在人脸检测部分的基础上, 对齐检测到的首个人脸(faces[0]), 保存至aligned_face。
-        aligned_face = recognizer.alignCrop(frame, face)
+        aligned_face = recognizer.alignCrop(frame, face*ration)
         # 在上文的基础上, 获取对齐人脸的特征feature。
         feature2 = recognizer.feature(aligned_face)
 
@@ -139,7 +139,8 @@ while(True):
         l2_score = recognizer.match(feature1, feature2, 1)
         if l2_score <= l2_similarity_threshold: 
             normL2Result=True
-        
+        #print(f"l2_score: {l2_score}")
+        #print(f"cosine_score: {cosine_score}")
         if(cosineResult&normL2Result):print(f"recognizer: is Same")
         else:print(f"recognizer: is Not Same")
     
@@ -152,7 +153,9 @@ while(True):
 
     # 計算FPS值
     end_time = time.time()
-    fps = 1 / (end_time - start_time)
+    division=(end_time - start_time)
+    if(division<=0):division=1
+    fps = 1 / division
     
     # Waits for a user input to quit the application
     if cv2.waitKey(1) & 0xFF == ord('q'):
