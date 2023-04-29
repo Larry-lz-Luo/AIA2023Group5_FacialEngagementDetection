@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\opencv_4.7.0\build\include;C:\openvino_toolkit_windows_2023.0.0.dev\runtime\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovlibs;$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;C:\opencv_4.7.0\build\include;C:\openvino_toolkit_windows_2023.0.0.dev\runtime\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -121,7 +121,7 @@
       </SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\opencv_4.7.0\build\include;C:\openvino_toolkit_windows_2023.0.0.dev\runtime\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovlibs;$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;C:\opencv_4.7.0\build\include;C:\openvino_toolkit_windows_2023.0.0.dev\runtime\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,7 +132,28 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\includes\gazeEstimation\eye_state_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\face_detector.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\face_inference_results.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\gaze_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\head_pose_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\ie_wrapper.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\landmarks_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\results_marker.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\utils.cpp" />
     <ClCompile Include="Scene2.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\eye_state_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\face_detector.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\face_inference_results.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\gaze_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\head_pose_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\ie_wrapper.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\landmarks_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\results_marker.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
