@@ -24,6 +24,9 @@
 using namespace cv;
 using namespace gaze_estimation;
 
+#define CVUI_IMPLEMENTATION
+#include "cvui.h"
+
 int main()
 {
     std::cout << "Hello World!\n";
@@ -72,6 +75,15 @@ int main()
     // Resize the Window
     cv::resizeWindow("MainSource", 640, 360);
 
+    // Init cvui and tell it to create a OpenCV window, i.e. cv::namedWindow(WINDOW_NAME).
+    cvui::init("controlWindow");
+    cv::Mat frameC = cv::Mat(cv::Size(650, 150), CV_8UC3);
+    frameC = cv::Scalar(49, 52, 49);
+    // Render UI components to the frame
+    cvui::text(frameC, 110, 80, "Hello, world!");
+    cvui::text(frameC, 110, 120, "cvui is awesome!");
+    cvui::text(frameC, 40, 40, "To exit this app click the button below or press Q (shortcut for the button below).");
+
     while (true)
     {
          cv::Mat frame = cap->read();
@@ -105,8 +117,13 @@ int main()
          }
          cv::putText(frame, "gaze angle H: " + std::to_string(std::round(gazeH)) + " V: " + std::to_string(std::round(gazeV)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
          //??frame?camera?????
-         imshow("MobileSource", frame);
+         imshow("MainSource", frame);
+         if (cvui::button(frameC, 300, 80, "&Quit")) {
+             break;
+         }
 
+         // Update cvui stuff and show everything on the screen
+         cvui::imshow("controlWindow", frameC);
         if (waitKey(1) == 27) { break; }
     }
 
