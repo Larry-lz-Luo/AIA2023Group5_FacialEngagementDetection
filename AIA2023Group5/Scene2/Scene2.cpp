@@ -30,16 +30,17 @@ int main()
 
     // Load OpenVINO runtime
     slog::info << ov::get_openvino_version() << slog::endl;
+
     ov::Core core;
-    std::string FLAGS_m_fd = "C:\\openvino_models\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
+    std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
         , FLAGS_d_fd = "GPU"
-        , FLAGS_m_hp = "C:\\openvino_models\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
+        , FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
         , FLAGS_d_hp = "GPU"
-        , FLAGS_m_lm = "C:\\openvino_models\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
+        , FLAGS_m_lm = "..\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
         , FLAGS_d_lm = "GPU"
-        , FLAGS_m_es = "C:\\openvino_models\\public\\open-closed-eye-0001\\open-closed-eye.xml"
+        , FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
         , FLAGS_d_es = "GPU"
-        , FLAGS_m = "C:\\openvino_models\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
+        , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
         , FLAGS_d = "GPU";
 
     // Set up face detector and estimators

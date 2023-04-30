@@ -114,7 +114,11 @@
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb_debug.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
+xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -138,7 +142,11 @@ copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\t
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
+xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
