@@ -80,5 +80,8 @@
     <ClInclude Include="..\includes\gazeEstimation\utils.hpp">
       <Filter>gazeEstimation</Filter>
     </ClInclude>
+    <ClInclude Include="cvui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
