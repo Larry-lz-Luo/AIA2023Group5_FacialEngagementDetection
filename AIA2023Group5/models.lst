@@ -1,8 +1,6 @@
 # This file can be used with the --list option of the model downloader.
-facial-landmarks-35-adas-????
-facial-landmarks-98-detection-????
-face-detection-adas-????
-face-detection-retail-????
-gaze-estimation-adas-????
-head-pose-estimation-adas-????
-open-closed-eye-????
+facial-landmarks-35-adas-0002
+face-detection-retail-0004
+gaze-estimation-adas-0002
+head-pose-estimation-adas-0001
+open-closed-eye-0001
