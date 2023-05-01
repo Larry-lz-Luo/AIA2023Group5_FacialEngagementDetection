@@ -35,3 +35,19 @@ omz_converter --list models.lst
 ![](pics/init1.png)
 
 使用 Visual Studio 2022 開啟 AIA2023Group5.sln 並執行 Scene2 專案 應可看見視線偵測的範例
+
+
+# 錄製資料集說明
+
+發布於 20230501 GazeRecord.zip中
+
+執行 GazeRecord\Release\Scene2.exe 
+![](pics/Record1.png)
+
+* Record Concentration :開始錄製專注上課特徵資料，左上方會有錄製提示，再按一次停止。 
+![](pics/Record2.png)
+
+* Record Not Concentration :開始錄製非專注上課特徵資料，左上方會有錄製提示，再按一次停止。 
+![](pics/Record3.png)
+* 錄製檔案csv 儲存於 GazeRecord\Release 下 檔案名稱為開始錄製時間。 
+![](pics/Record4.png)
