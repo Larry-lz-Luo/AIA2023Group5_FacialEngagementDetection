@@ -35,20 +35,20 @@ using namespace std;
 #define POC_HEIGHT 480
 
 // face detect setting
-string FLAGS_d_fd = "GPU";
+string FLAGS_d_fd = "CPU";
 float FLAGS_t_fd = 0.6;
 int FLAGS_inh_fd = POC_HEIGHT;
 int FLAGS_inw_fd = POC_WIDTH;
 float FLAGS_exp_r_fd = 1.15;
 bool showFaceBoundingBox = true;
 
-string FLAGS_m_fd = "C:\\Users\\Larry Luo\\Documents\\repo\\20230429_v4_ready_to_face_registration\\20230429\\POC\\AIA2023Group5\\weight\\face-detection-adas-0001.xml";
+string FLAGS_m_fd = "..\\intel\\face-detection-adas-0001\\FP32\\face-detection-adas-0001.xml";
 const auto fd_model_path = FLAGS_m_fd;
 
-string FLAGS_m_fr = "C:\\Users\\Larry Luo\\Documents\\repo\\20230429_v4_ready_to_face_registration\\20230429\\POC\\AIA2023Group5\\weight\\face-reidentification-retail-0095.xml";
+string FLAGS_m_fr = "..\\intel\\face-reidentification-retail-0095\\FP32\\face-reidentification-retail-0095.xml";
 const auto fr_model_path = FLAGS_m_fr;
 
-string FLAGS_m_lm = "C:\\Users\\Larry Luo\\Documents\\repo\\20230429_v4_ready_to_face_registration\\20230429\\POC\\AIA2023Group5\\weight\\landmarks-regression-retail-0009.xml";
+string FLAGS_m_lm = "..\\intel\\landmarks-regression-retail-0009\\FP32\\landmarks-regression-retail-0009.xml";
 const auto lm_model_path = FLAGS_m_lm;
 
 // face landmark setting
@@ -56,7 +56,7 @@ string FLAGS_d_lm = "GPU";
 
 // face re setting 
 string FLAGS_d_reid = "GPU";
-string FLAGS_fg = "C:\\Users\\Larry Luo\\Documents\\repo\\20230429_v4_ready_to_face_registration\\20230429\\POC\\AIA2023Group5\\gallery\\faces_gallery.json"; // gallery path
+string FLAGS_fg = "..\\faceDB\\faces_gallery.json"; // gallery path
 //string FLAGS_fg = "faces_gallery.json"; // gallery path
 //const auto fg_path = "C:\\Users\\qx50\\Documents\\_AI\\intel zoo\\open_model_zoo\\demos\\build\\intel64\\Release\\utils\\faces_gallery.json";
 //string FLAGS_fg = fg_path;
