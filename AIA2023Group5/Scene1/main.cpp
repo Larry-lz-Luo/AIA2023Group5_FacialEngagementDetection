@@ -302,26 +302,27 @@ int main()
                     if (face.label != EmbeddingsGallery::unknown_id)
                         label_to_draw += face_label;
                     //slog::info << "face_label get: " << face_label << slog::endl;
-                    if (showFaceBoundingBox) { // 
-                        try
-                        {
-                            const cv::Scalar text_color(255, 255, 255);
-                            cv::rectangle(frame, faces[i].rect, cv::Scalar::all(255), 1);
-                            int baseLine = 0;
-                            const cv::Size label_size = cv::getTextSize(face_label, cv::FONT_HERSHEY_PLAIN, 1, 1, &baseLine);
-                            cv::putText(frame, face_label, cv::Point(faces[i].rect.x, faces[i].rect.y), cv::FONT_HERSHEY_PLAIN, 1,
-                                text_color, 1, cv::LINE_AA);
-                            /*auto scale = 0.002 * faces[i].rect.width;
-                            putHighlightedText(frame,
-                                cv::format("Detector confidence: %0.2f",
-                                    static_cast<double>(faces[i].confidence)),
-                                cv::Point(static_cast<int>(faces[i].rect.x),
-                                    static_cast<int>(faces[i].rect.y)),
-                                cv::FONT_HERSHEY_COMPLEX, scale, cv::Scalar(200, 10, 10), 1);*/
-                        }
-                        catch (...) {}
-                }
                 
+                }
+
+                if (showFaceBoundingBox) { // 
+                    try
+                    {
+                        const cv::Scalar text_color(255, 255, 255);
+                        cv::rectangle(frame, faces[i].rect, cv::Scalar::all(255), 1);
+                        int baseLine = 0;
+                        const cv::Size label_size = cv::getTextSize(face_label, cv::FONT_HERSHEY_PLAIN, 1, 1, &baseLine);
+                        cv::putText(frame, face_label, cv::Point(faces[i].rect.x, faces[i].rect.y), cv::FONT_HERSHEY_PLAIN, 1,
+                            text_color, 1, cv::LINE_AA);
+                        /*auto scale = 0.002 * faces[i].rect.width;
+                        putHighlightedText(frame,
+                            cv::format("Detector confidence: %0.2f",
+                                static_cast<double>(faces[i].confidence)),
+                            cv::Point(static_cast<int>(faces[i].rect.x),
+                                static_cast<int>(faces[i].rect.y)),
+                            cv::FONT_HERSHEY_COMPLEX, scale, cv::Scalar(200, 10, 10), 1);*/
+                    }
+                    catch (...) {}
                 }
             }
             catch (...) {}

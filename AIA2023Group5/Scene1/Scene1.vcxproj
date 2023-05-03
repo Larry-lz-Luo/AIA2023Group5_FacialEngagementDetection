@@ -122,11 +122,23 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDIR)external\openvino\deployment_tools\inference_engine\lib\intel64\$(Configuration)\*.lib;$(SolutionDIR)external\opencv-4.7.0\lib\opencv_world470d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470d.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvinod.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static_debug.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
     </ProjectReference>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb_debug.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470d.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
+xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\faceDB\" mkdir "$(SolutionDir)$(Platform)\faceDB\"
+xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -146,6 +158,18 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\*.lib;$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static.lib;pdh.lib;shlwapi.lib;odbc32.lib;odbccp32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
+xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y
+if not exist "$(SolutionDir)$(Platform)\$(Configuration)\faceDB\" mkdir "$(SolutionDir)$(Platform)\faceDB\"
+xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="action_detector.cpp" />
