@@ -1,6 +1,8 @@
 ﻿// AIA2023Group5.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include <windows.h>
+HWND hwnd;
 
 #include "wtypes.h"
 #include <iostream>
@@ -108,13 +110,15 @@ std::vector<std::string> stringSplit(std::string str, char delimiter)
     return tokens;
 }
 
+std::string folder_path = "..\\faceDB\\";
+
 void loadDB() {
 
     features.clear();
     names.clear();
     ids.clear();
 
-    std::string folder_path = "..\\faceDB\\";
+   
     std::vector<std::string> filenames;
     glob(folder_path + "*.jpg", filenames, false);
 
@@ -197,6 +201,7 @@ void Release() {
 }
 
 int sceneStatus = 0;
+cv::Mat cameraFrame;
 
 cv::Mat RunScene1(cv::Mat canvas) {
 
@@ -285,6 +290,15 @@ cv::Mat RunScene1(cv::Mat canvas) {
         
     }
 
+    if (cvui::button(canvas, reSize.width + x, y+30, "SIGN UP")) {
+
+        cameraFrame = cap->read();
+        sceneStatus = 4;
+        // 顯示視窗
+        ShowWindow(hwnd, SW_SHOWDEFAULT);
+        UpdateWindow(hwnd);
+    }
+
     return frame;
 
 }
@@ -363,10 +377,96 @@ cv::Mat RunScene2(cv::Mat canvas) {
 
 bool isRunning = false;
 
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+        if (LOWORD(wParam) == 1)
+        {
+            // 取得 Text Box 控制項中的文字
+            TCHAR buffer[1024];
+            GetWindowText(GetDlgItem(hwnd, 0), buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+            // 輸出到控制台
+            OutputDebugString(buffer);
+            OutputDebugString(L"\n");
+            std::wstring ws(buffer);
+            std::string name(ws.begin(), ws.end());
+
+            if (name.size() > 0) {
+            
+                bool result = cv::imwrite(folder_path+ std::to_string(ids.size()) + "_" + name + "_.jpg", cameraFrame);
+
+                // 檢查是否儲存成功
+                if (!result)
+                {
+                    std::cerr << "Failed to save image!" << std::endl;
+                }
+
+                ShowWindow(hwnd, SW_HIDE);
+                UpdateWindow(hwnd);
+
+                sceneStatus = 0;
+            }
+        }
+        else if (LOWORD(wParam) == 2)
+        {
+            OutputDebugString(L"cancel");
+            OutputDebugString(L"\n");
+            ShowWindow(hwnd, SW_HIDE);
+            UpdateWindow(hwnd);
+            sceneStatus = 0;
+        }
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+
+    default:
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
 int main()
 {
     std::cout << "AIA2023 Group5 Demo\n";
+    // 註冊視窗類別
+    WNDCLASS wc = {};
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.lpszClassName = L"MyClass";
+    RegisterClass(&wc);
+    // 建立視窗
+    hwnd = CreateWindow(L"MyClass", L"User Name", WS_OVERLAPPEDWINDOW & ~WS_SYSMENU,
+        CW_USEDEFAULT, CW_USEDEFAULT, 330, 150,
+        NULL, NULL, GetModuleHandle(NULL), NULL);
 
+    // 建立 Text Box 控制項
+    HWND hTextBox = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL,
+        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+        10, 20, 200, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+
+    // 建立按鈕控制項
+    HWND hButton = CreateWindow(L"BUTTON", L"Register",
+        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        210, 10, 80, 30, hwnd, (HMENU)1, GetModuleHandle(NULL), NULL);
+
+    HWND hButton2 = CreateWindow(L"BUTTON", L"Cancel", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+        210, 50, 80, 30, hwnd, (HMENU)2, GetModuleHandle(NULL), NULL);
+
+    std::thread([&]() {
+        // 訊息迴圈
+        MSG msg = {};
+        while (GetMessage(&msg, NULL, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            
+        }
+        }).detach();
+
+   
     Init();
 
     int horizontal = 0;
@@ -385,15 +485,16 @@ int main()
     while (isRunning)
     {
         
-        cv::Mat cameraFrame;
         if (sceneStatus == 0) {
+            status.setTo(cv::Scalar(0, 0, 0));
             canvas.setTo(cv::Scalar(0, 0, 0));
             loadDB();
             sceneStatus = 1;
         }
         else if (sceneStatus==1) {
             
-            cameraFrame = RunScene1(canvas);
+             RunScene1(canvas);
+            cvui::image(canvas, 0, 0, status);
         }
         else if (sceneStatus == 2) {
             VideoCapture vid_capture("https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4");
@@ -460,10 +561,14 @@ int main()
         }
         else if (sceneStatus == 3) {
             cameraFrame = RunScene2(canvas);
+            cvui::image(canvas, 0, 0, status);
+        }
+        else if (sceneStatus ==4) {
+
+            cvui::image(canvas, 0, 0, cameraFrame);
         }
 
         cvui::update();
-        cvui::image(canvas, 0,0, status);
         cvui::imshow(windowName,canvas);
         if (waitKey(1) == 27) {
             isRunning = false;
