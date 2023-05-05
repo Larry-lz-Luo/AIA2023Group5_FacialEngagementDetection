@@ -58,11 +58,10 @@ cv::Size frameSize = stringToSize(sizeString);
 // resize down
 cv::Size downSize = cv::Size(640 / 3, 360 / 3);
 cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
-cv::Size reSize = cv::Size(640 , 360 );
+cv::Size reSize = cv::Size(640*1.5 , 360*1.5);
 std::unique_ptr<ImagesCapture> cap;
 
-std::string FLAGS_m_fd = //"..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
-"..\\intel\\face-detection-adas-0001\\FP32\\face-detection-adas-0001.xml"
+std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP16\\face-detection-retail-0004.xml"
 , FLAGS_d_fd = "GPU"
 , FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
 , FLAGS_d_hp = "GPU"
@@ -71,19 +70,184 @@ std::string FLAGS_m_fd = //"..\\intel\\face-detection-retail-0004\\FP32\\face-de
 , FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
 , FLAGS_d_es = "GPU"
 , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
-, FLAGS_d = "GPU";
+, FLAGS_d = "GPU"
+, FLAGS_m_fr= "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
 ResultsMarker resultsMarker(true, true, true, true, true);
+
+FaceDetector *faceDetector;
 // Put pointers to all estimators in an array so that they could be processed uniformly in a loop
 std::vector< BaseEstimator*> estimators;
 
-cv::Mat RunScene2(FaceDetector faceDetector) {
+Ptr<FaceRecognizerSF> faceRecognizer;
+
+double cosine_similar_thresh = 0.363;
+double l2norm_similar_thresh = 1.128;
+
+std::vector<std::string> ids;
+std::vector<std::string> names;
+std::vector<Mat> features;
+
+std::vector<std::string> stringSplit(std::string str, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(str);
+
+    while (getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
+void loadDB() {
+
+    features.clear();
+    names.clear();
+    ids.clear();
+
+    std::string folder_path = "..\\faceDB\\";
+    std::vector<std::string> filenames;
+    glob(folder_path + "*.jpg", filenames, false);
+
+    for (size_t i = 0; i < filenames.size(); i++)
+    {
+        Mat image = imread(filenames[i]);
+        resize(image, image, reSize, INTER_LINEAR);
+
+        auto inferenceResults = faceDetector->detect(image);
+
+        //find main face
+        int maxArea = 0;
+        int maxFace = -1;
+        for (int i = 0; i < inferenceResults.size(); i++) {
+
+            auto& inferenceResult = inferenceResults[i];
+            //cv::rectangle(image, inferenceResult.faceBoundingBox, Scalar(255, 0, 0), 2);
+            int area = inferenceResult.faceBoundingBox.width * inferenceResult.faceBoundingBox.height;
+            if (area > maxArea)
+            {
+                maxArea = area;
+                maxFace = i;
+            }
+        }
+
+        if (maxFace >= 0)
+        {
+            cv::Rect box = inferenceResults[maxFace].faceBoundingBox;
+            Mat aligned_face = image(box);
+            // Run feature extraction with given aligned_face
+            Mat feature;
+            faceRecognizer->feature(aligned_face, feature);
+            features.push_back(feature.clone());
+            std::vector<std::string> tokens = stringSplit(filenames[i].substr(folder_path.length()), '_');
+
+            ids.push_back(tokens[0]);
+            names.push_back(tokens[1]);
+        }
+
+    }
+}
+
+//#define DO_ESTIMATORS
+void Init() {
+
+    // Load OpenVINO runtime
+    slog::info << ov::get_openvino_version() << slog::endl;
+
+    ov::Core core;
+
+    // Set up face detector and estimators
+    faceDetector = new FaceDetector(core, FLAGS_m_fd, FLAGS_d_fd, 0.5, false);
+
+    // Initialize FaceRecognizerSF
+    faceRecognizer = FaceRecognizerSF::create(FLAGS_m_fr, "");
+
+#ifdef DO_ESTIMATORS
+    HeadPoseEstimator headPoseEstimator(core, FLAGS_m_hp, FLAGS_d_hp);
+    LandmarksEstimator landmarksEstimator(core, FLAGS_m_lm, FLAGS_d_lm);
+    EyeStateEstimator eyeStateEstimator(core, FLAGS_m_es, FLAGS_d_es);
+    GazeEstimator gazeEstimator(core, FLAGS_m, FLAGS_d);
+    estimators.push_back(&headPoseEstimator);
+    estimators.push_back(&landmarksEstimator);
+    estimators.push_back(&eyeStateEstimator);
+    estimators.push_back(&gazeEstimator);
+#endif // DO_ESTIMATORS
+
+}
+
+int sceneStatus = 0;
+
+cv::Mat RunScene1(cv::Mat canvas) {
+
+    cv::Mat frame = cap->read();
+    resize(frame, frame, reSize, INTER_LINEAR);
+
+    auto inferenceResults = faceDetector->detect(frame);
+
+    //find main face
+    int maxArea = 0;
+    int maxFace = -1;
+    for (int i = 0; i < inferenceResults.size(); i++) {
+
+        auto& inferenceResult = inferenceResults[i];
+        cv::rectangle(frame, inferenceResult.faceBoundingBox, Scalar(255, 0, 0), 2);
+        int area = inferenceResult.faceBoundingBox.width * inferenceResult.faceBoundingBox.height;
+        if (area > maxArea)
+        {
+            maxArea = area;
+            maxFace = i;
+        }
+    }
+
+    Mat aligned_face;
+    if (maxFace >= 0)
+    {
+        //has max face
+        cv::Rect box = inferenceResults[maxFace].faceBoundingBox;
+        Mat feature_target;
+        aligned_face = frame(box);
+        faceRecognizer->feature(aligned_face, feature_target);
+
+        for (Mat feature : features) {
+
+            double cos_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_COSINE);
+            double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
+
+            if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
+                cv::putText(frame, "ID: " + ids[maxFace] + " Name: " + names[maxFace], cv::Point(box.x, box.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                break;
+            }
+            else
+            {
+
+            }
+        }
+
+
+    }
+
+    int x = 50;
+    int y = (canvas.rows / 2) - (reSize.height / 2);
+    cvui::image(canvas, x, y, frame);
+
+    if (cvui::button(canvas, reSize.width+x,y, "LOGIN")) {
+        sceneStatus = 2;
+    }
+
+    return frame;
+
+}
+
+cv::Mat RunScene2(cv::Mat canvas) {
 
     cv::Mat frame = cap->read();
     cv::Size graphSize{ frame.cols / 4, 60 };
 
     // Infer results
     if (!estimators.empty()) {
-        auto inferenceResults = faceDetector.detect(frame);
+        auto inferenceResults = faceDetector->detect(frame);
         for (auto& inferenceResult : inferenceResults) {
             for (auto estimator : estimators) {
                 estimator->estimate(frame, inferenceResult);
@@ -110,63 +274,19 @@ cv::Mat RunScene2(FaceDetector faceDetector) {
     }
     resize(frame, frame, downSize, INTER_LINEAR);
 
+    int x = canvas.cols - downSize.width - 10;
+    int y = 10;
+    cvui::window(canvas,x , y, downSize.width, downSize.height, "Participant");
+    cvui::image(canvas, x, y+20, frame);
+
+    
+    if (cvui::button(canvas, x, y+ downSize.height+30, "LEAVE")) {
+        sceneStatus = 0;
+    }
+
     return frame;
 
 }
-
-std::vector<std::string> ids;
-std::vector<std::string> names;
-std::vector<Mat> features;
-
-std::vector<std::string> stringSplit(std::string str, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(str);
-
-    while (getline(tokenStream, token, delimiter))
-    {
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
-void loadDB(Ptr<FaceDetectorYN> detector, Ptr<FaceRecognizerSF> faceRecognizer) {
-
-    features.clear();
-    names.clear();
-    ids.clear();
-
-    std::string folder_path = "..\\faceDB\\";
-    std::vector<std::string> filenames;
-    glob(folder_path + "*.jpg", filenames, false);
-
-    for (size_t i = 0; i < filenames.size(); i++)
-    {
-        Mat image = imread(filenames[i]);
-        cv::Mat image1Resize;
-        resize(image, image1Resize, reSize, INTER_LINEAR);
-        Mat faces0;
-        detector->detect(image1Resize, faces0);
-
-        float ration = image.rows / reSize.height;
-        Mat aligned_face;
-        faceRecognizer->alignCrop(image1Resize, faces0.row(0), aligned_face);
-
-        // Run feature extraction with given aligned_face
-        Mat feature;
-        faceRecognizer->feature(aligned_face, feature);
-        features.push_back(feature.clone());
-        std::vector<std::string> tokens = stringSplit(filenames[i].substr(folder_path.length()), '_');
-
-        ids.push_back(tokens[0]);
-        names.push_back(tokens[1]);
-
-    }
-}
-
-//#define DO_ESTIMATORS
 
 bool isRunning = false;
 
@@ -174,28 +294,11 @@ int main()
 {
     std::cout << "AIA2023 Group5 Demo\n";
 
+    Init();
+
     int horizontal = 0;
     int vertical = 0;
     GetDesktopResolution(horizontal, vertical);
-
-    // Load OpenVINO runtime
-    slog::info << ov::get_openvino_version() << slog::endl;
-
-    ov::Core core;
-    // Set up face detector and estimators
-    //FaceDetector faceDetector(core, FLAGS_m_fd, FLAGS_d_fd, 0.5, false);
-
-#ifdef DO_ESTIMATORS
-    HeadPoseEstimator headPoseEstimator(core, FLAGS_m_hp, FLAGS_d_hp);
-    LandmarksEstimator landmarksEstimator(core, FLAGS_m_lm, FLAGS_d_lm);
-    EyeStateEstimator eyeStateEstimator(core, FLAGS_m_es, FLAGS_d_es);
-    GazeEstimator gazeEstimator(core, FLAGS_m, FLAGS_d);
-    estimators.push_back(&headPoseEstimator);
-    estimators.push_back(&landmarksEstimator);
-    estimators.push_back(&eyeStateEstimator);
-    estimators.push_back(&gazeEstimator);
-#endif // DO_ESTIMATORS
-
     cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
 
     cvui::init(windowName);
@@ -204,17 +307,16 @@ int main()
     // Create a frame
     cv::Mat canvas = cv::Mat(cv::Size(horizontal, vertical), CV_8UC3);
 
-    VideoCapture vid_capture("https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4");
+    // cv::Mat cameraFrame = cv::Mat(downSize, CV_8UC3);
+
+    isRunning = true;
+    /*
+    *  VideoCapture vid_capture("https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4");
     // Print error message if the stream is invalid
     if (!vid_capture.isOpened())
     {
         std::cout << "Error opening video stream or file\n";
     }
-
-    // cv::Mat cameraFrame = cv::Mat(downSize, CV_8UC3);
-
-    isRunning = true;
-    /*
      std::thread([&]() {
         while (isRunning)
         {
@@ -232,97 +334,64 @@ int main()
         }).detach();
     */
    
-    double cosine_similar_thresh = 0.363;
-    double l2norm_similar_thresh = 1.128;
-    // Initialize FaceDetectorYN
-    Ptr<FaceDetectorYN> detector = FaceDetectorYN::create("..\\faceDB\\face_detection_yunet_2022mar.onnx", "", reSize);
-    // Initialize FaceRecognizerSF
-    Ptr<FaceRecognizerSF> faceRecognizer = FaceRecognizerSF::create("..\\faceDB\\face_recognition_sface_2021dec_int8.onnx", "");
-    
-    loadDB(detector, faceRecognizer);
-   
     while (isRunning)
     {
         
-        cv::Mat frame = cap->read();
-        cv::Mat frameResize;
-        resize(frame, frameResize, reSize, INTER_LINEAR);
-        Mat faces;
-        detector->detect(frameResize, faces);
-
-        //find main face
-        int maxArea = 0;
-        int maxFace=-1;
-        for (int i = 0; i < faces.rows;i++) {
-            cv::Mat face = faces.row(i);
-            cv::Rect box(face.at<float>(0), face.at<float>(1) , face.at<float>(2) , face.at<float>(3));
+        cv::Mat cameraFrame;
+        if (sceneStatus == 0) {
+            canvas.setTo(cv::Scalar(0, 0, 0));
+            loadDB();
+            sceneStatus = 1;
+        }
+        else if (sceneStatus==1) {
             
-            cv::rectangle(frameResize, box, Scalar(255, 0, 0), 2);
-            int area = box.width * box.height;
-            if (area > maxArea)
-            {
-                maxArea = area;
-                maxFace =i;
-            }
+            cameraFrame = RunScene1(canvas);
         }
-
-        if (maxFace >= 0)
-        {
-            //has max face
-            cv::Mat face = faces.row(maxFace);
-            cv::Rect box(face.at<float>(0), face.at<float>(1), face.at<float>(2), face.at<float>(3));
-            Mat aligned_face;
-            Mat feature_target;
-            faceRecognizer->alignCrop(frameResize, face, aligned_face);
-            faceRecognizer->feature(aligned_face, feature_target);
-
-            for (Mat feature : features) {
-
-                double cos_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_COSINE);
-                double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
-
-                if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh){
-                    cv::putText(frameResize, "ID: "+ids[maxFace]+" Name: "+names[maxFace], cv::Point(box.x, box.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-                    break;
-                }
-                else
-                {
-
-                }
-                /*
-                
-                 if (cos_score >= cosine_similar_thresh)
+        else if (sceneStatus == 2) {
+            VideoCapture vid_capture("https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4");
+            // Print error message if the stream is invalid
+            if (!vid_capture.isOpened())
             {
-                std::cout << "They have the same identity;";
+                std::cout << "Error opening video stream or file\n";
             }
             else
             {
-                std::cout << "They have different identities;";
-            }
-            std::cout << " Cosine Similarity: " << cos_score << ", threshold: " << cosine_similar_thresh << ". (higher value means higher similarity, max 1.0)\n";
-            if (L2_score <= l2norm_similar_thresh)
-            {
-                std::cout << "They have the same identity;";
-            }
-            else
-            {
-                std::cout << "They have different identities.";
-            }
-            std::cout << " NormL2 Distance: " << L2_score << ", threshold: " << l2norm_similar_thresh << ". (lower value means higher similarity, min 0.0)\n";
-                */
-            }
+                canvas.setTo(cv::Scalar(0, 0, 0));
+                std::thread([&](VideoCapture vid_capture) {
+                        while (sceneStatus >= 2)
+                        {
+                            Mat frame;
+                            // Initialize a boolean to check if frames are there or not
+                            bool isSuccess = vid_capture.read(frame);
 
+                            // If frames are present, show it
+                            if (isSuccess == true)
+                            {
+                                resize(frame, frame, downSizeVideo, INTER_LINEAR);
+                                cvui::image(canvas, 0, 100, frame);
+                            }
+                            else {
+                        
+                                if (frame.empty()) { // 如果影片播放完畢，則從頭開始播放
+                                    vid_capture.set(cv::CAP_PROP_POS_FRAMES, 0);
+                                    continue;
+                                }
+                            }
+                            Sleep(33);
+                        }
+                        vid_capture.release(); // 釋放資源
 
+                        canvas.setTo(cv::Scalar(0, 0, 0));
+                    }, vid_capture).detach();
+                    sceneStatus = 3;
+            }
         }
-
-       // cv::Mat cameraFrame = RunScene2(faceDetector);
-       // cvui::window(canvas, horizontal - downSize.width - 10, 10, downSize.width, downSize.height, "Student");
-       // cvui::image(canvas, horizontal - downSize.width - 10, 30, cameraFrame);
+        else if (sceneStatus == 3) {
+            cameraFrame = RunScene2(canvas);
+        }
 
         cvui::update();
-        cvui::imshow(windowName, frameResize
-           // canvas
-        );
+        cvui::imshow(windowName,canvas);
         if (waitKey(1) == 27) {
             isRunning = false;
             Sleep(1000);
