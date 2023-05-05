@@ -50,65 +50,38 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     vertical = desktop.bottom;
 }
 
+std::string windowName = "AIA2023 Group5 Demo";
 std::string sizeString = "640x360";
 
 cv::Size frameSize = stringToSize(sizeString);
 
-int main()
-{
-    std::cout << "AIA2023 Group5 Demo\n";
+// resize down
+cv::Size downSize = cv::Size(640 / 3, 360 / 3);
+cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
+std::unique_ptr<ImagesCapture> cap;
 
-    // Load OpenVINO runtime
-    slog::info << ov::get_openvino_version() << slog::endl;
 
-    ov::Core core;
-    std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
-        , FLAGS_d_fd = "GPU"
-        , FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
-        , FLAGS_d_hp = "GPU"
-        , FLAGS_m_lm = "..\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
-        , FLAGS_d_lm = "GPU"
-        , FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
-        , FLAGS_d_es = "GPU"
-        , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
-        , FLAGS_d = "GPU";
+std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
+, FLAGS_d_fd = "CPU"
+, FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
+, FLAGS_d_hp = "CPU"
+, FLAGS_m_lm = "..\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
+, FLAGS_d_lm = "CPU"
+, FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
+, FLAGS_d_es = "CPU"
+, FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
+, FLAGS_d = "CPU";
+ResultsMarker resultsMarker(false, false, false, false, false);
+// Put pointers to all estimators in an array so that they could be processed uniformly in a loop
+std::vector< BaseEstimator*> estimators;
 
-    // Set up face detector and estimators
-    FaceDetector faceDetector(core, FLAGS_m_fd, FLAGS_d_fd, 0.5, false);
-    HeadPoseEstimator headPoseEstimator(core, FLAGS_m_hp, FLAGS_d_hp);
-    LandmarksEstimator landmarksEstimator(core, FLAGS_m_lm, FLAGS_d_lm);
-    EyeStateEstimator eyeStateEstimator(core, FLAGS_m_es, FLAGS_d_es);
-    GazeEstimator gazeEstimator(core, FLAGS_m, FLAGS_d);
+void RunScene2(cv::Mat canvas, int horizontal,int vertical , FaceDetector faceDetector) {
 
-    // Put pointers to all estimators in an array so that they could be processed uniformly in a loop
-    BaseEstimator* estimators[] = {
-        &headPoseEstimator,
-        &landmarksEstimator,
-        &eyeStateEstimator,
-        &gazeEstimator
-    };
-    // Each element of the vector contains inference results on one face
-    std::vector<FaceInferenceResults> inferenceResults;
-    bool flipImage = false;
-    ResultsMarker resultsMarker(true, true, true, true, true);
-    int delay = 1;
-    std::string windowName = "Gaze estimation demo";
+    cv::Mat frame = cap->read();
+    cv::Size graphSize{ frame.cols / 4, 60 };
 
-    std::unique_ptr<ImagesCapture> cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
-
-    cvui::init("MainSource");
-    cv::resizeWindow("MainSource", frameSize.width, frameSize.height);
-    int horizontal = 0;
-    int vertical = 0;
-    GetDesktopResolution(horizontal, vertical);
-    cv::moveWindow("MainSource", 0, 0);
-
-    while (true)
-    {
-        cv::Mat frame = cap->read();
-        cv::Size graphSize{ frame.cols / 4, 60 };
-
-        // Infer results
+    // Infer results
+    if (!estimators.empty()) {
         auto inferenceResults = faceDetector.detect(frame);
         for (auto& inferenceResult : inferenceResults) {
             for (auto estimator : estimators) {
@@ -133,8 +106,71 @@ int main()
         }
         cv::putText(frame, "gaze angle H: " + std::to_string(std::round(gazeH)) + " V: " + std::to_string(std::round(gazeV)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
 
+    }
+    
+    cvui::window(canvas, horizontal - downSize.width - 10, 10, downSize.width, downSize.height, "Student");
+    resize(frame, frame, downSize, INTER_LINEAR);
+    cvui::image(canvas, horizontal - downSize.width - 10, 30, frame);
+    cvui::update();
+
+}
+
+int main()
+{
+    std::cout << "AIA2023 Group5 Demo\n";
+
+    // Load OpenVINO runtime
+    slog::info << ov::get_openvino_version() << slog::endl;
+
+    ov::Core core;
+    // Set up face detector and estimators
+    FaceDetector faceDetector(core, FLAGS_m_fd, FLAGS_d_fd, 0.5, false);
+    /*
+      HeadPoseEstimator headPoseEstimator(core, FLAGS_m_hp, FLAGS_d_hp);
+    LandmarksEstimator landmarksEstimator(core, FLAGS_m_lm, FLAGS_d_lm);
+    EyeStateEstimator eyeStateEstimator(core, FLAGS_m_es, FLAGS_d_es);
+    GazeEstimator gazeEstimator(core, FLAGS_m, FLAGS_d);
+   
+    estimators.push_back(&headPoseEstimator);
+    estimators.push_back(&landmarksEstimator);
+    estimators.push_back(&eyeStateEstimator);
+    estimators.push_back(&gazeEstimator);
+    */
+  
+    cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
+
+    int horizontal = 0;
+    int vertical = 0;
+    GetDesktopResolution(horizontal, vertical);
+    vertical = 720;
+    cvui::init(windowName);
+    cv::resizeWindow(windowName, horizontal ,vertical);
+    cv::moveWindow(windowName, 0, 0);
+    // Create a frame
+    cv::Mat canvas = cv::Mat(cv::Size(horizontal, vertical), CV_8UC3);
+
+    VideoCapture vid_capture("https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_20mb.mp4");
+    // Print error message if the stream is invalid
+    if (!vid_capture.isOpened())
+    {
+        std::cout << "Error opening video stream or file\n";
+    }
+    while (true)
+    {
+        Mat frame;
+        // Initialize a boolean to check if frames are there or not
+        bool isSuccess = vid_capture.read(frame);
+
+        // If frames are present, show it
+        if (isSuccess == true)
+        {
+            resize(frame, frame, downSizeVideo, INTER_LINEAR);
+            cvui::image(canvas, 0, 0, frame);
+        }
+
+        RunScene2(canvas, horizontal, vertical, faceDetector);
         // Update cvui stuff and show everything on the screen
-        cvui::imshow("MainSource", frame);
+        cvui::imshow(windowName, canvas);
         if (waitKey(1) == 27) { break; }
     }
 }
