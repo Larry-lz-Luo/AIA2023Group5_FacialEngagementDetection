@@ -155,7 +155,28 @@ xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\includes\gazeEstimation\eye_state_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\face_detector.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\face_inference_results.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\gaze_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\head_pose_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\ie_wrapper.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\landmarks_estimator.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\results_marker.cpp" />
+    <ClCompile Include="..\includes\gazeEstimation\utils.cpp" />
     <ClCompile Include="AIA2023Group5.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\eye_state_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\face_detector.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\face_inference_results.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\gaze_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\head_pose_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\ie_wrapper.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\landmarks_estimator.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\results_marker.hpp" />
+    <ClInclude Include="..\includes\gazeEstimation\utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

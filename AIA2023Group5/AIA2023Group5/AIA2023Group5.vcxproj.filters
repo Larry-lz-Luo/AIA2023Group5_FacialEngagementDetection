@@ -13,10 +13,72 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="gazeEstimation">
+      <UniqueIdentifier>{6b21ead4-c907-4af0-bbf5-19e099899c7a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIA2023Group5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\eye_state_estimator.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\face_detector.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\face_inference_results.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\gaze_estimator.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\head_pose_estimator.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\ie_wrapper.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\landmarks_estimator.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\results_marker.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\includes\gazeEstimation\utils.cpp">
+      <Filter>gazeEstimation</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\eye_state_estimator.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\face_detector.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\face_inference_results.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\gaze_estimator.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\head_pose_estimator.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\ie_wrapper.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\landmarks_estimator.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\results_marker.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="..\includes\gazeEstimation\utils.hpp">
+      <Filter>gazeEstimation</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
