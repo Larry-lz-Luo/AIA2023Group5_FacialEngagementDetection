@@ -194,6 +194,24 @@ cv::Mat RunScene1(cv::Mat canvas) {
         auto& inferenceResult = inferenceResults[i];
         cv::rectangle(frame, inferenceResult.faceBoundingBox, Scalar(255, 0, 0), 2);
         int area = inferenceResult.faceBoundingBox.width * inferenceResult.faceBoundingBox.height;
+        Mat feature_target;
+        Mat aligned_face = frame(inferenceResult.faceBoundingBox);
+        faceRecognizer->feature(aligned_face, feature_target);
+        for (int j = 0;j< features.size();j++) {
+
+            Mat feature = features[j];
+            double cos_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_COSINE);
+            double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
+
+            if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
+                cv::putText(frame, "ID: " + ids[j] + " Name: " + names[j], cv::Point(inferenceResult.faceBoundingBox.x, inferenceResult.faceBoundingBox.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                break;
+            }
+            else
+            {
+
+            }
+        }
         if (area > maxArea)
         {
             maxArea = area;
@@ -202,6 +220,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
     }
 
     Mat aligned_face;
+    bool isMember = false;
     if (maxFace >= 0)
     {
         //has max face
@@ -216,7 +235,8 @@ cv::Mat RunScene1(cv::Mat canvas) {
             double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
 
             if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
-                cv::putText(frame, "ID: " + ids[maxFace] + " Name: " + names[maxFace], cv::Point(box.x, box.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+               // cv::putText(frame, "ID: " + ids[maxFace] + " Name: " + names[maxFace], cv::Point(box.x, box.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                isMember = true;
                 break;
             }
             else
@@ -233,7 +253,17 @@ cv::Mat RunScene1(cv::Mat canvas) {
     cvui::image(canvas, x, y, frame);
 
     if (cvui::button(canvas, reSize.width+x,y, "LOGIN")) {
-        sceneStatus = 2;
+
+        if (isMember) {
+            canvas.setTo(cv::Scalar(0, 0, 0));
+            cv::putText(canvas, "Welcome!! " + names[maxFace]+" please wait.....", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 255, 0), 2); // 在圖像上添加警報文字
+            sceneStatus = 2;
+        }
+        else {
+            canvas.setTo(cv::Scalar(0, 0, 0));
+            cv::putText(canvas, "Login Fail" , cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
+        }
+        
     }
 
     return frame;
