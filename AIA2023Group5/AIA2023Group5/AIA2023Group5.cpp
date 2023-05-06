@@ -37,6 +37,11 @@ using namespace gaze_estimation;
 #include <ctime> 
 #include <time.h>
 
+
+#define DO_ESTIMATORS
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
 // Get the horizontal and vertical screen sizes in pixel
 void GetDesktopResolution(int& horizontal, int& vertical)
 {
@@ -52,18 +57,28 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     vertical = desktop.bottom;
 }
 
+std::vector<std::string> stringSplit(std::string str, char delimiter)
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(str);
+
+    while (getline(tokenStream, token, delimiter))
+    {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
+
 std::string windowName = "AIA2023 Group5 Demo";
 std::string sizeString = "1280x720";
-
 cv::Size frameSize = stringToSize(sizeString);
 
-// resize down
 cv::Size downSize = cv::Size(640 / 3, 360 / 3);
 cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
 cv::Size reSize = cv::Size(640*1.5 , 360*1.5);
-
 cv::Mat status = cv::Mat(cv::Size(1000, 100), CV_8UC3);
-
 std::unique_ptr<ImagesCapture> cap;
 
 std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
@@ -92,25 +107,14 @@ Ptr<FaceRecognizerSF> faceRecognizer;
 double cosine_similar_thresh = 0.363;
 double l2norm_similar_thresh = 1.128;
 
+int sceneStatus = 0;
+cv::Mat cameraFrame;
+bool isRunning = false;
+
+std::string folder_path = "..\\faceDB\\";
 std::vector<std::string> ids;
 std::vector<std::string> names;
 std::vector<Mat> features;
-
-std::vector<std::string> stringSplit(std::string str, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(str);
-
-    while (getline(tokenStream, token, delimiter))
-    {
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
-std::string folder_path = "..\\faceDB\\";
 
 void loadDB() {
 
@@ -118,7 +122,6 @@ void loadDB() {
     names.clear();
     ids.clear();
 
-   
     std::vector<std::string> filenames;
     glob(folder_path + "*.jpg", filenames, false);
 
@@ -161,7 +164,6 @@ void loadDB() {
     }
 }
 
-#define DO_ESTIMATORS
 void Init() {
 
     // Load OpenVINO runtime
@@ -186,6 +188,45 @@ void Init() {
     estimators.push_back(gazeEstimator);
 #endif // DO_ESTIMATORS
 
+    //Alert UI Window
+    {
+        WNDCLASS wc = {};
+        wc.lpfnWndProc = WindowProc;
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.lpszClassName = L"MyClass";
+        RegisterClass(&wc);
+        // 建立視窗
+        hwnd = CreateWindow(L"MyClass", L"User Name", WS_OVERLAPPEDWINDOW & ~WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT, 330, 150,
+            NULL, NULL, GetModuleHandle(NULL), NULL);
+
+        // 建立 Text Box 控制項
+        HWND hTextBox = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL,
+            WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+            10, 20, 200, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+
+        // 建立按鈕控制項
+        HWND hButton = CreateWindow(L"BUTTON", L"Register",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            210, 10, 80, 30, hwnd, (HMENU)1, GetModuleHandle(NULL), NULL);
+
+        HWND hButton2 = CreateWindow(L"BUTTON", L"Cancel", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            210, 50, 80, 30, hwnd, (HMENU)2, GetModuleHandle(NULL), NULL);
+
+        std::thread([&]() {
+            // 訊息迴圈
+            MSG msg = {};
+        while (GetMessage(&msg, NULL, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+        }
+            }).detach();
+    }
+
+    cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
+    
 }
 
 void Release() {
@@ -200,8 +241,13 @@ void Release() {
     estimators.clear();
 }
 
-int sceneStatus = 0;
-cv::Mat cameraFrame;
+void RunScene3() {
+    cameraFrame = cap->read();
+    sceneStatus = 4;
+    // 顯示視窗
+    ShowWindow(hwnd, SW_SHOWDEFAULT);
+    UpdateWindow(hwnd);
+}
 
 cv::Mat RunScene1(cv::Mat canvas) {
 
@@ -292,11 +338,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
 
     if (cvui::button(canvas, reSize.width + x, y+30, "SIGN UP")) {
 
-        cameraFrame = cap->read();
-        sceneStatus = 4;
-        // 顯示視窗
-        ShowWindow(hwnd, SW_SHOWDEFAULT);
-        UpdateWindow(hwnd);
+        RunScene3();
     }
 
     return frame;
@@ -375,105 +417,15 @@ cv::Mat RunScene2(cv::Mat canvas) {
 
 }
 
-bool isRunning = false;
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    switch (uMsg)
-    {
-    case WM_COMMAND:
-        if (LOWORD(wParam) == 1)
-        {
-            // 取得 Text Box 控制項中的文字
-            TCHAR buffer[1024];
-            GetWindowText(GetDlgItem(hwnd, 0), buffer, sizeof(buffer) / sizeof(buffer[0]));
-
-            // 輸出到控制台
-            OutputDebugString(buffer);
-            OutputDebugString(L"\n");
-            std::wstring ws(buffer);
-            std::string name(ws.begin(), ws.end());
-
-            if (name.size() > 0) {
-            
-                bool result = cv::imwrite(folder_path+ std::to_string(ids.size()) + "_" + name + "_.jpg", cameraFrame);
-
-                // 檢查是否儲存成功
-                if (!result)
-                {
-                    std::cerr << "Failed to save image!" << std::endl;
-                }
-
-                ShowWindow(hwnd, SW_HIDE);
-                UpdateWindow(hwnd);
-
-                sceneStatus = 0;
-            }
-        }
-        else if (LOWORD(wParam) == 2)
-        {
-            OutputDebugString(L"cancel");
-            OutputDebugString(L"\n");
-            ShowWindow(hwnd, SW_HIDE);
-            UpdateWindow(hwnd);
-            sceneStatus = 0;
-        }
-        break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        return 0;
-
-    default:
-        return DefWindowProc(hwnd, uMsg, wParam, lParam);
-    }
-}
 
 int main()
 {
     std::cout << "AIA2023 Group5 Demo\n";
-    // 註冊視窗類別
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandle(NULL);
-    wc.lpszClassName = L"MyClass";
-    RegisterClass(&wc);
-    // 建立視窗
-    hwnd = CreateWindow(L"MyClass", L"User Name", WS_OVERLAPPEDWINDOW & ~WS_SYSMENU,
-        CW_USEDEFAULT, CW_USEDEFAULT, 330, 150,
-        NULL, NULL, GetModuleHandle(NULL), NULL);
-
-    // 建立 Text Box 控制項
-    HWND hTextBox = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL,
-        WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-        10, 20, 200, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
-
-    // 建立按鈕控制項
-    HWND hButton = CreateWindow(L"BUTTON", L"Register",
-        WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        210, 10, 80, 30, hwnd, (HMENU)1, GetModuleHandle(NULL), NULL);
-
-    HWND hButton2 = CreateWindow(L"BUTTON", L"Cancel", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
-        210, 50, 80, 30, hwnd, (HMENU)2, GetModuleHandle(NULL), NULL);
-
-    std::thread([&]() {
-        // 訊息迴圈
-        MSG msg = {};
-        while (GetMessage(&msg, NULL, 0, 0))
-        {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-            
-        }
-        }).detach();
-
    
     Init();
 
-    int horizontal = 0;
-    int vertical = 0;
+    int horizontal = 0, vertical = 0;
     GetDesktopResolution(horizontal, vertical);
-    cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
-
     cvui::init(windowName);
     cv::resizeWindow(windowName, horizontal ,vertical);
     cv::moveWindow(windowName, 0, 0);
@@ -579,13 +531,53 @@ int main()
     Release();
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    switch (uMsg)
+    {
+    case WM_COMMAND:
+        if (LOWORD(wParam) == 1)
+        {
+            // 取得 Text Box 控制項中的文字
+            TCHAR buffer[1024];
+            GetWindowText(GetDlgItem(hwnd, 0), buffer, sizeof(buffer) / sizeof(buffer[0]));
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
+            // 輸出到控制台
+            OutputDebugString(buffer);
+            OutputDebugString(L"\n");
+            std::wstring ws(buffer);
+            std::string name(ws.begin(), ws.end());
+
+            if (name.size() > 0) {
+
+                bool result = cv::imwrite(folder_path + std::to_string(ids.size()) + "_" + name + "_.jpg", cameraFrame);
+
+                // 檢查是否儲存成功
+                if (!result)
+                {
+                    std::cerr << "Failed to save image!" << std::endl;
+                }
+
+                ShowWindow(hwnd, SW_HIDE);
+                UpdateWindow(hwnd);
+
+                sceneStatus = 0;
+            }
+        }
+        else if (LOWORD(wParam) == 2)
+        {
+            OutputDebugString(L"cancel");
+            OutputDebugString(L"\n");
+            ShowWindow(hwnd, SW_HIDE);
+            UpdateWindow(hwnd);
+            sceneStatus = 0;
+        }
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+
+    default:
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
