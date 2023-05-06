@@ -104,8 +104,8 @@ std::vector< BaseEstimator*> estimators;
 
 Ptr<FaceRecognizerSF> faceRecognizer;
 
-double cosine_similar_thresh = 0.363;
-double l2norm_similar_thresh = 1.128;
+double cosine_similar_thresh = 0.45;// 0.363;
+double l2norm_similar_thresh = 0.98;// 1.128;
 
 int sceneStatus = 0;
 cv::Mat cameraFrame;
@@ -291,6 +291,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
 
     Mat aligned_face;
     bool isMember = false;
+    int indexId = 0;
     if (maxFace >= 0)
     {
         //has max face
@@ -313,6 +314,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
             {
 
             }
+            indexId++;
         }
 
 
@@ -326,7 +328,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
 
         if (isMember) {
             status.setTo(cv::Scalar(0, 0, 0));
-            cv::putText(status, "Welcome!! " + names[maxFace]+" please wait.....", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 255, 0), 2); // 在圖像上添加警報文字
+            cv::putText(status, "Welcome!! " + names[indexId]+" please wait.....", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 255, 0), 2); // 在圖像上添加警報文字
             sceneStatus = 2;
         }
         else {
@@ -351,7 +353,7 @@ std::vector<float> recordStatus;
 cv::Mat RunScene2(cv::Mat canvas) {
 
     cv::Mat frame = cap->read();
-    cv::Size graphSize{ frame.cols / 4, 60 };
+    //cv::Size graphSize{ frame.cols / 4, 60 };
     // Infer results
     if (!estimators.empty()) {
         //find main face
