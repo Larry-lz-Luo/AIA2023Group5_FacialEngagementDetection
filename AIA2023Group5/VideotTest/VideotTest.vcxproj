@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{3eb499c5-bb6a-4c61-8003-f83d75f457ba}</ProjectGuid>
-    <RootNamespace>AIA2023Group5</RootNamespace>
+    <ProjectGuid>{df5e7158-a0bd-4c74-9d26-793ffdbf272c}</ProjectGuid>
+    <RootNamespace>VideotTest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -101,8 +101,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>
-      </SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)opencv\build\include;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
@@ -110,7 +109,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)includes\xglibs\xgboost.lib;$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470d.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvinod.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static_debug.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470d.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvinod.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static_debug.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
@@ -120,10 +119,7 @@ copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470d.dll" "$(SolutionD
 if not exist "$(SolutionDir)$(Platform)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
 if not exist "$(SolutionDir)$(Platform)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
 xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
-xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y
-if not exist "$(SolutionDir)$(Platform)\$(Configuration)\faceDB\" mkdir "$(SolutionDir)$(Platform)\faceDB\"
-xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y
-copy "$(SolutionDir)includes\xglibs\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,8 +127,7 @@ copy "$(SolutionDir)includes\xglibs\*.dll" "$(SolutionDir)$(Platform)\$(Configur
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>
-      </SDLCheck>
+      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)opencv\build\include;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
@@ -142,7 +137,7 @@ copy "$(SolutionDir)includes\xglibs\*.dll" "$(SolutionDir)$(Platform)\$(Configur
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)includes\xglibs\xgboost.lib;$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvino.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvino.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
@@ -152,10 +147,7 @@ copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470.dll" "$(SolutionDi
 if not exist "$(SolutionDir)$(Platform)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
 if not exist "$(SolutionDir)$(Platform)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
 xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
-xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y
-if not exist "$(SolutionDir)$(Platform)\faceDB\" mkdir "$(SolutionDir)$(Platform)\faceDB\" 
-xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y
-copy "$(SolutionDir)includes\xglibs\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"</Command>
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -168,7 +160,7 @@ copy "$(SolutionDir)includes\xglibs\*.dll" "$(SolutionDir)$(Platform)\$(Configur
     <ClCompile Include="..\includes\gazeEstimation\landmarks_estimator.cpp" />
     <ClCompile Include="..\includes\gazeEstimation\results_marker.cpp" />
     <ClCompile Include="..\includes\gazeEstimation\utils.cpp" />
-    <ClCompile Include="AIA2023Group5.cpp" />
+    <ClCompile Include="VideotTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp" />
