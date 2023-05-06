@@ -77,7 +77,7 @@ std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-dete
 , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
 , FLAGS_d = "GPU"
 , FLAGS_m_fr= "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
-ResultsMarker resultsMarker(true, true, true, true, true);
+ResultsMarker resultsMarker(false, false, false,false, false);
 
 FaceDetector *faceDetector;
 HeadPoseEstimator *headPoseEstimator;
@@ -342,12 +342,12 @@ cv::Mat RunScene2(cv::Mat canvas) {
             gazeV = gazeAngles.y;
         }
 
-        cv::putText(frame, "gaze angle H: " + std::to_string(std::round(gazeH)) + " V: " + std::to_string(std::round(gazeV)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+        //cv::putText(frame, "gaze angle H: " + std::to_string(std::round(gazeH)) + " V: " + std::to_string(std::round(gazeV)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
 
         //check gaze
         {
             std::unique_lock<std::mutex> locker(mu);
-            if (fabs(gazeH) > 20 || fabs(gazeV) > 12) {
+            if (fabs(gazeH) > 21 || fabs(gazeV) > 12) {
                 recordStatus.push_back(1);
             }
             else  {
@@ -543,7 +543,7 @@ int main()
                             std::cout << "recordStatus.size():" << recordStatus.size() << "\n";
                             float avg = std::accumulate(recordStatus.begin(), recordStatus.end(), 0.0f) / recordStatus.size();
                             std::cout << "avg:"<< avg<<"\n";
-                            if (avg > 0.4) {
+                            if (avg > 0.47) {
                                 cv::putText(status, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
                             }
                             else {
