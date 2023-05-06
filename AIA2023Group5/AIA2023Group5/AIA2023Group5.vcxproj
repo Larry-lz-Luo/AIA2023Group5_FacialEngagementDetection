@@ -148,10 +148,12 @@ xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y</Command>
 copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
 copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-if not exist "$(SolutionDir)$(Platform)\$(Configuration)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
-if not exist "$(SolutionDir)$(Platform)\$(Configuration)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
+if not exist "$(SolutionDir)$(Platform)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
+if not exist "$(SolutionDir)$(Platform)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
 xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
-xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
+xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y
+if not exist "$(SolutionDir)$(Platform)\faceDB\" mkdir "$(SolutionDir)$(Platform)\faceDB\" 
+xcopy "$(SolutionDir)faceDB" "$(SolutionDir)$(Platform)\faceDB\" /E /Y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
