@@ -119,6 +119,33 @@ std::vector<Mat> features;
 #include <xgboost/c_api.h>
 BoosterHandle booster;
 
+void checkGaze(FaceInferenceResults inferenceResult) {
+
+
+    // 載入預測資料
+    float data[1][3] = { {inferenceResult.gazeVector.x,inferenceResult.gazeVector.y,inferenceResult.gazeVector.z} };
+    // 設定預測參數
+    bst_ulong num_row = 1;
+    bst_ulong num_col = 3;
+    // 執行預測
+    DMatrixHandle dtest;
+    int ret = XGDMatrixCreateFromMat(&data[0][0], num_row, num_col, NAN, &dtest);
+    if (ret == 0) {
+        bst_ulong out_len;
+        const float* out_result = NULL;
+        /* Run prediction with DMatrix object. */
+        ret = XGBoosterPredict(booster, dtest, 0, 0, &out_len, &out_result);
+        if (ret == 0) {
+            // 輸出預測結果
+            std::cout << "Predict result：" << out_result[0] << std::endl;
+
+            // 釋放資源
+            XGDMatrixFree(dtest);
+        }
+
+    }
+}
+
 void loadDB() {
 
     features.clear();
@@ -385,6 +412,8 @@ cv::Mat RunScene2(cv::Mat canvas) {
         if (maxFace >= 0){
             auto const& inferenceResult = inferenceResults[maxFace];
             resultsMarker.mark(frame, inferenceResult);
+            checkGaze(inferenceResult);
+
             cv::Point2f gazeAngles;
             gazeVectorToGazeAngles(inferenceResult.gazeVector, gazeAngles);
             gazeH = gazeAngles.x;
