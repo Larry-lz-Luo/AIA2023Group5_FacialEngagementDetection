@@ -116,6 +116,9 @@ std::vector<std::string> ids;
 std::vector<std::string> names;
 std::vector<Mat> features;
 
+#include <xgboost/c_api.h>
+BoosterHandle booster;
+
 void loadDB() {
 
     features.clear();
@@ -239,6 +242,8 @@ void Release() {
     if (gazeEstimator)delete gazeEstimator;
 
     estimators.clear();
+
+    XGBoosterFree(booster);
 }
 
 void RunScene3() {
@@ -423,7 +428,13 @@ cv::Mat RunScene2(cv::Mat canvas) {
 int main()
 {
     std::cout << "AIA2023 Group5 Demo\n";
-   
+
+    // 載入模型
+    int res = XGBoosterCreate(NULL, 0, &booster);
+    std::cout << "XGBoosterCreate: " << res << "\n";
+    res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
+    std::cout << "XGBoosterLoadModel: " << res << "\n";
+
     Init();
 
     int horizontal = 0, vertical = 0;
