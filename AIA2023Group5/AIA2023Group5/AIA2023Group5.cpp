@@ -78,7 +78,8 @@ cv::Size frameSize = stringToSize(sizeString);
 cv::Size downSize = cv::Size(640 / 3, 360 / 3);
 cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
 cv::Size reSize = cv::Size(640*1.5 , 360*1.5);
-cv::Mat status = cv::Mat(cv::Size(1000, 100), CV_8UC3);
+cv::Mat status = cv::Mat(cv::Size(1000, 50), CV_8UC3);
+cv::Mat status2 = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 std::unique_ptr<ImagesCapture> cap;
 
 std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
@@ -119,9 +120,18 @@ std::vector<Mat> features;
 #include <xgboost/c_api.h>
 BoosterHandle booster;
 
-void checkGaze(FaceInferenceResults inferenceResult) {
-
-
+std::mutex mu;
+std::vector<float> recordStatusWithXGBooster;
+bool resultWithXGBooster = false;
+void loadXGBoosterSingle() {
+    // 載入模型
+    int res = XGBoosterCreate(NULL, 0, &booster);
+    std::cout << "XGBoosterCreate: " << res << "\n";
+    res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
+    std::cout << "XGBoosterLoadModel: " << res << "\n";
+}
+//single frame with gaze angle x y z
+void checkGazeWithXGBoosterSingle(FaceInferenceResults inferenceResult) {
     // 載入預測資料
     float data[1][3] = { {inferenceResult.gazeVector.x,inferenceResult.gazeVector.y,inferenceResult.gazeVector.z} };
     // 設定預測參數
@@ -137,13 +147,105 @@ void checkGaze(FaceInferenceResults inferenceResult) {
         ret = XGBoosterPredict(booster, dtest, 0, 0, &out_len, &out_result);
         if (ret == 0) {
             // 輸出預測結果
-            std::cout << "Predict result：" << out_result[0] << std::endl;
-
+           // std::cout << "Predict result：" << out_result[0] << std::endl;
+            recordStatusWithXGBooster.push_back(out_result[0]);
             // 釋放資源
             XGDMatrixFree(dtest);
         }
 
     }
+
+
+    std::unique_lock<std::mutex> locker(mu);
+    if (recordStatusWithXGBooster.size() >= 30) {
+        float avg = std::accumulate(recordStatusWithXGBooster.begin(), recordStatusWithXGBooster.end(), 0.0f) / recordStatusWithXGBooster.size();
+        std::cout << "recordStatusWithXGBooster avg:" << avg << "\n";
+        if (avg < 0.47) {
+            //not concentrated
+            resultWithXGBooster = false;
+        }
+        else {
+            resultWithXGBooster = true;
+        }
+
+        recordStatusWithXGBooster.clear();
+    }
+    locker.unlock();
+
+}
+
+
+void loadXGBooster() {
+    loadXGBoosterSingle();
+}
+
+void checkGazeWithXGBooster(FaceInferenceResults inferenceResult) {
+    checkGazeWithXGBoosterSingle(inferenceResult);
+
+}
+
+
+std::vector<float> recordStatusWithAngles;
+bool resultWithAngles = false;
+void checkGazeWithAngles(FaceInferenceResults inferenceResult) {
+
+    float gazeH = 100;
+    float gazeV = 100;
+    cv::Point2f gazeAngles;
+    gazeVectorToGazeAngles(inferenceResult.gazeVector, gazeAngles);
+    //check gaze
+    {
+
+        gazeH = gazeAngles.x;
+        gazeV = gazeAngles.y;
+        std::unique_lock<std::mutex> locker(mu);
+        if (fabs(gazeH) > 21 || fabs(gazeV) > 12) {
+            //not concentrated
+            recordStatusWithAngles.push_back(0);
+        }
+        else {
+            recordStatusWithAngles.push_back(1);
+        }
+
+        if (recordStatusWithAngles.size() >= 30) {
+            float avg = std::accumulate(recordStatusWithAngles.begin(), recordStatusWithAngles.end(), 0.0f) / recordStatusWithAngles.size();
+            std::cout << "GazeAngles avg:" << avg << "\n";
+            if (avg < 0.47) {
+                resultWithAngles = false;
+            }
+            else {
+                resultWithAngles = true;
+            }
+            
+            recordStatusWithAngles.clear();
+        }
+        locker.unlock();
+    }
+}
+
+void updateStatusThread() {
+
+    std::thread([&]() {
+        while (sceneStatus == 3 && isRunning)
+        {
+            std::unique_lock<std::mutex> locker(mu);
+            if (!resultWithAngles) {
+                cv::putText(status, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
+            }
+            else {
+                status.setTo(cv::Scalar(0, 0, 0));
+            }
+
+            if (!resultWithXGBooster) {
+                cv::putText(status2, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(255, 0, 0), 2); // 在圖像上添加警報文字
+            }
+            else {
+                status2.setTo(cv::Scalar(0, 0, 0));
+            }
+            locker.unlock();
+            Sleep(1000);
+        }
+        }).detach();
 }
 
 void loadDB() {
@@ -379,9 +481,6 @@ cv::Mat RunScene1(cv::Mat canvas) {
 
 }
 
-std::mutex mu;
-std::vector<float> recordStatus;
-
 cv::Mat RunScene2(cv::Mat canvas) {
 
     cv::Mat frame = cap->read();
@@ -407,32 +506,14 @@ cv::Mat RunScene2(cv::Mat canvas) {
             }
         }
 
-        float gazeH = 100;
-        float gazeV = 100;
         if (maxFace >= 0){
             auto const& inferenceResult = inferenceResults[maxFace];
             resultsMarker.mark(frame, inferenceResult);
-            checkGaze(inferenceResult);
+            checkGazeWithAngles(inferenceResult);
+            checkGazeWithXGBooster(inferenceResult);
 
-            cv::Point2f gazeAngles;
-            gazeVectorToGazeAngles(inferenceResult.gazeVector, gazeAngles);
-            gazeH = gazeAngles.x;
-            gazeV = gazeAngles.y;
         }
-
         //cv::putText(frame, "gaze angle H: " + std::to_string(std::round(gazeH)) + " V: " + std::to_string(std::round(gazeV)), cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-
-        //check gaze
-        {
-            std::unique_lock<std::mutex> locker(mu);
-            if (fabs(gazeH) > 21 || fabs(gazeV) > 12) {
-                recordStatus.push_back(1);
-            }
-            else  {
-                recordStatus.push_back(0);
-            }
-            locker.unlock();
-        }
 
     }
 
@@ -453,17 +534,12 @@ cv::Mat RunScene2(cv::Mat canvas) {
 
 }
 
-
 int main()
 {
     std::cout << "AIA2023 Group5 Demo\n";
 
-    // 載入模型
-    int res = XGBoosterCreate(NULL, 0, &booster);
-    std::cout << "XGBoosterCreate: " << res << "\n";
-    res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
-    std::cout << "XGBoosterLoadModel: " << res << "\n";
-
+    loadXGBooster();
+   
     Init();
 
     int horizontal = 0, vertical = 0;
@@ -500,6 +576,7 @@ int main()
             else
             {
                 status.setTo(cv::Scalar(0, 0, 0));
+                status2.setTo(cv::Scalar(0, 0, 0));
                 canvas.setTo(cv::Scalar(0, 0, 0));
                 std::thread([&](VideoCapture vid_capture) {
                         while (sceneStatus >= 2 && isRunning)
@@ -528,34 +605,13 @@ int main()
                         canvas.setTo(cv::Scalar(0, 0, 0));
                     }, vid_capture).detach();
                 sceneStatus = 3;
-                std::thread([&]() {
-                    while (sceneStatus == 3 && isRunning)
-                    {
-                        std::unique_lock<std::mutex> locker(mu);
-                        if (!recordStatus.empty()) {
-
-                            std::cout << "recordStatus.size():" << recordStatus.size() << "\n";
-                            float avg = std::accumulate(recordStatus.begin(), recordStatus.end(), 0.0f) / recordStatus.size();
-                            std::cout << "avg:"<< avg<<"\n";
-                            if (avg > 0.47) {
-                                cv::putText(status, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
-                            }
-                            else {
-                                status.setTo(cv::Scalar(0, 0, 0));
-                            }
-
-                        }
-
-                        recordStatus.clear();
-                        locker.unlock();
-                        Sleep(1500);
-                    }
-                    }).detach();
+                updateStatusThread();
             }
         }
         else if (sceneStatus == 3) {
             cameraFrame = RunScene2(canvas);
             cvui::image(canvas, 0, 0, status);
+            cvui::image(canvas, 0, 60, status2);
         }
         else if (sceneStatus ==4) {
 
