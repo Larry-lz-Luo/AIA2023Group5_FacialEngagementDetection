@@ -143,8 +143,9 @@ std::vector<float> getFaceInferenceData76(FaceInferenceResults inferenceResult) 
     result.push_back(inferenceResult.headPoseAngles.x); result.push_back(inferenceResult.headPoseAngles.y);
     result.push_back(inferenceResult.headPoseAngles.z);
     for (int i = 0; i < inferenceResult.faceLandmarks.size(); i++) {
-        result.push_back(inferenceResult.faceLandmarks[i].x);
-        result.push_back(inferenceResult.faceLandmarks[i].y);
+        //shift to BoundingBox 0,0 for normalize
+        result.push_back(inferenceResult.faceLandmarks[i].x - inferenceResult.faceBoundingBox.x);
+        result.push_back(inferenceResult.faceLandmarks[i].y - inferenceResult.faceBoundingBox.y);
     }
 
     return result;
@@ -158,7 +159,7 @@ std::vector<float> getFaceInferenceData(FaceInferenceResults inferenceResult) {
 
 void loadXGBoosterSingle() {
     // 載入模型
-    int res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
+    int res = XGBoosterLoadModel(booster, "..\\models\\XGB_model_76features2.json");
     std::cout << "XGBoosterLoadModel: " << res << "\n";
 }
 
