@@ -123,23 +123,62 @@ BoosterHandle booster;
 std::mutex mu;
 std::vector<float> recordStatusWithXGBooster;
 bool resultWithXGBooster = false;
+std::vector<std::vector<float>> recordInferenceResults;
+
+
+std::vector<float> getFaceInferenceData6(FaceInferenceResults inferenceResult) {
+
+    return 
+    { 
+        inferenceResult.gazeVector.x,inferenceResult.gazeVector.y,inferenceResult.gazeVector.z
+        ,inferenceResult.headPoseAngles.x,inferenceResult.headPoseAngles.y,inferenceResult.headPoseAngles.z
+    };
+}
+
+std::vector<float> getFaceInferenceData76(FaceInferenceResults inferenceResult) {
+    std::vector<float> result;
+
+    result.push_back(inferenceResult.gazeVector.x); result.push_back(inferenceResult.gazeVector.y); 
+    result.push_back(inferenceResult.gazeVector.z);
+    result.push_back(inferenceResult.headPoseAngles.x); result.push_back(inferenceResult.headPoseAngles.y);
+    result.push_back(inferenceResult.headPoseAngles.z);
+    for (int i = 0; i < inferenceResult.faceLandmarks.size(); i++) {
+        result.push_back(inferenceResult.faceLandmarks[i].x);
+        result.push_back(inferenceResult.faceLandmarks[i].y);
+    }
+
+    return result;
+}
+
+std::vector<float> getFaceInferenceData(FaceInferenceResults inferenceResult) {
+    return 
+        //getFaceInferenceData6(inferenceResult);
+        getFaceInferenceData76(inferenceResult);
+}
+
 void loadXGBoosterSingle() {
     // 載入模型
-    int res = XGBoosterCreate(NULL, 0, &booster);
-    std::cout << "XGBoosterCreate: " << res << "\n";
-    res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
+    int res = XGBoosterLoadModel(booster, "..\\models\\model.txt");
     std::cout << "XGBoosterLoadModel: " << res << "\n";
 }
+
+void loadXGBooster30Frame() {
+    // 載入模型
+    int res = XGBoosterLoadModel(booster, "..\\models\\XGB_model_DAiSEE.json");
+    std::cout << "loadXGBooster30FrameLoadModel: " << res << "\n";
+}
+
 //single frame with gaze angle x y z
 void checkGazeWithXGBoosterSingle(FaceInferenceResults inferenceResult) {
     // 載入預測資料
-    float data[1][3] = { {inferenceResult.gazeVector.x,inferenceResult.gazeVector.y,inferenceResult.gazeVector.z} };
+    recordInferenceResults.push_back(getFaceInferenceData(inferenceResult));
+    //float data[1][3] = { };
     // 設定預測參數
-    bst_ulong num_row = 1;
-    bst_ulong num_col = 3;
+    bst_ulong num_row = recordInferenceResults.size();
+    bst_ulong num_col = recordInferenceResults[0].size();
     // 執行預測
     DMatrixHandle dtest;
-    int ret = XGDMatrixCreateFromMat(&data[0][0], num_row, num_col, NAN, &dtest);
+    int ret = XGDMatrixCreateFromMat(&recordInferenceResults[0][0], num_row, num_col, NAN, &dtest);
     if (ret == 0) {
         bst_ulong out_len;
         const float* out_result = NULL;
@@ -147,20 +186,20 @@ void checkGazeWithXGBoosterSingle(FaceInferenceResults inferenceResult) {
         ret = XGBoosterPredict(booster, dtest, 0, 0, &out_len, &out_result);
         if (ret == 0) {
             // 輸出預測結果
-           // std::cout << "Predict result：" << out_result[0] << std::endl;
+            std::cout << "checkGazeWithXGBoosterSingle Predict result：" << out_result[0] << std::endl;
             recordStatusWithXGBooster.push_back(out_result[0]);
             // 釋放資源
             XGDMatrixFree(dtest);
         }
 
     }
-
+    recordInferenceResults.clear();
 
     std::unique_lock<std::mutex> locker(mu);
     if (recordStatusWithXGBooster.size() >= 30) {
         float avg = std::accumulate(recordStatusWithXGBooster.begin(), recordStatusWithXGBooster.end(), 0.0f) / recordStatusWithXGBooster.size();
         std::cout << "recordStatusWithXGBooster avg:" << avg << "\n";
-        if (avg < 0.47) {
+        if (avg < 0.5) {
             //not concentrated
             resultWithXGBooster = false;
         }
@@ -174,16 +213,56 @@ void checkGazeWithXGBoosterSingle(FaceInferenceResults inferenceResult) {
 
 }
 
+void checkGazeWithXGBooster30Frame(FaceInferenceResults inferenceResult) {
 
-void loadXGBooster() {
-    loadXGBoosterSingle();
+    std::unique_lock<std::mutex> locker(mu);
+    recordInferenceResults.push_back(getFaceInferenceData(inferenceResult));
+    if (recordInferenceResults.size() >= 30) {
+        // 載入預測資料
+        // 設定預測參數
+        bst_ulong num_row = 30;
+        bst_ulong num_col = 3;
+        // 執行預測
+        DMatrixHandle dtest;
+        int ret = XGDMatrixCreateFromMat(&recordInferenceResults[0][0], num_row, num_col, NAN, &dtest);
+        if (ret == 0) {
+            bst_ulong out_len;
+            const float* out_result = NULL;
+            /* Run prediction with DMatrix object. */
+            ret = XGBoosterPredict(booster, dtest, 0, 0, &out_len, &out_result);
+            if (ret == 0) {
+                // 輸出預測結果
+                std::cout << "checkGazeWithXGBooster30Frame Predict result：" << out_result[0] << std::endl;
+                if (out_result[0] < 0.5) {
+                    //not concentrated
+                    resultWithXGBooster = false;
+                }
+                else {
+                    resultWithXGBooster = true;
+                }
+                // 釋放資源
+                XGDMatrixFree(dtest);
+            }
+
+        }
+        recordInferenceResults.clear();
+    }
+    locker.unlock();
+
 }
 
 void checkGazeWithXGBooster(FaceInferenceResults inferenceResult) {
     checkGazeWithXGBoosterSingle(inferenceResult);
-
+    //checkGazeWithXGBooster30Frame(inferenceResult);
 }
 
+void loadXGBooster() {
+
+    int res = XGBoosterCreate(NULL, 0, &booster);
+    std::cout << "XGBoosterCreate: " << res << "\n";
+    loadXGBoosterSingle();
+    //loadXGBooster30Frame();
+}
 
 std::vector<float> recordStatusWithAngles;
 bool resultWithAngles = false;
@@ -209,7 +288,7 @@ void checkGazeWithAngles(FaceInferenceResults inferenceResult) {
 
         if (recordStatusWithAngles.size() >= 30) {
             float avg = std::accumulate(recordStatusWithAngles.begin(), recordStatusWithAngles.end(), 0.0f) / recordStatusWithAngles.size();
-            std::cout << "GazeAngles avg:" << avg << "\n";
+           // std::cout << "GazeAngles avg:" << avg << "\n";
             if (avg < 0.47) {
                 resultWithAngles = false;
             }
@@ -230,14 +309,14 @@ void updateStatusThread() {
         {
             std::unique_lock<std::mutex> locker(mu);
             if (!resultWithAngles) {
-                cv::putText(status, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
+                cv::putText(status, "Not concentrated", cv::Point(10, 40), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
             }
             else {
                 status.setTo(cv::Scalar(0, 0, 0));
             }
 
             if (!resultWithXGBooster) {
-                cv::putText(status2, "Not concentrated", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(255, 0, 0), 2); // 在圖像上添加警報文字
+                cv::putText(status2, "Not concentrated", cv::Point(10, 40), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(255, 0, 0), 2); // 在圖像上添加警報文字
             }
             else {
                 status2.setTo(cv::Scalar(0, 0, 0));
@@ -589,7 +668,7 @@ int main()
                             if (isSuccess == true)
                             {
                                 resize(frame, frame, downSizeVideo, INTER_LINEAR);
-                                cvui::image(canvas, 0, 100, frame);
+                                cvui::image(canvas, 0, 0, frame);
                             }
                             else {
                         
@@ -610,8 +689,8 @@ int main()
         }
         else if (sceneStatus == 3) {
             cameraFrame = RunScene2(canvas);
-            cvui::image(canvas, 0, 0, status);
-            cvui::image(canvas, 0, 60, status2);
+            cvui::image(canvas, 0, vertical-200, status);
+            cvui::image(canvas, 0, vertical-120, status2);
         }
         else if (sceneStatus ==4) {
 
