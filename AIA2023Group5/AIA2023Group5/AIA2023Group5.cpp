@@ -93,7 +93,7 @@ std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-dete
 , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
 , FLAGS_d = "GPU"
 , FLAGS_m_fr= "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
-ResultsMarker resultsMarker(false, false, false,false, false);
+ResultsMarker resultsMarker(true, true, true, true, true);
 
 FaceDetector *faceDetector;
 HeadPoseEstimator *headPoseEstimator;
@@ -108,7 +108,7 @@ Ptr<FaceRecognizerSF> faceRecognizer;
 double cosine_similar_thresh = 0.45;// 0.363;
 double l2norm_similar_thresh = 0.98;// 1.128;
 
-int sceneStatus = 0;
+int sceneStatus = 2;
 cv::Mat cameraFrame;
 bool isRunning = false;
 
@@ -151,15 +151,109 @@ std::vector<float> getFaceInferenceData76(FaceInferenceResults inferenceResult) 
     return result;
 }
 
+std::vector<float> getFaceInferenceDataEDA(FaceInferenceResults inferenceResult) {
+    std::vector<float> result;
+
+    result.push_back(inferenceResult.faceBoundingBox.y); 
+    result.push_back(inferenceResult.faceLandmarks[2-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[13-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[14-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[15-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[16-1].x- inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.faceLandmarks[16-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[17-1].x- inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.faceLandmarks[17-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[19-1].y- inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.headPoseAngles.y);
+    result.push_back(inferenceResult.headPoseAngles.z);
+    result.push_back(inferenceResult.leftEyeState);
+    result.push_back(inferenceResult.rightEyeState);
+    result.push_back(inferenceResult.leftEyeBoundingBox.y);
+    result.push_back(inferenceResult.rightEyeBoundingBox.x); result.push_back(inferenceResult.rightEyeBoundingBox.y);
+    result.push_back(inferenceResult.getEyeLandmarks()[2-1].y);
+    result.push_back(inferenceResult.leftEyeMidpoint.y);
+    result.push_back(inferenceResult.gazeVector.z);
+
+    return result;
+}
+
+std::vector<float> getFaceInferenceDataEDA_jasonTest(FaceInferenceResults inferenceResult) {
+    std::vector<float> result;
+
+    result.push_back(inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[2 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[13 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[14 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[15 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[16 - 1].x - inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.faceLandmarks[16 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[17 - 1].x - inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.faceLandmarks[17 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[19 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.headPoseAngles.y);
+    result.push_back(inferenceResult.headPoseAngles.z);
+    result.push_back(inferenceResult.leftEyeState);
+    result.push_back(inferenceResult.rightEyeState);
+    result.push_back(inferenceResult.rightEyeBoundingBox.x); 
+    result.push_back(inferenceResult.getEyeLandmarks()[2 - 1].y);
+    result.push_back(inferenceResult.gazeVector.z);
+
+    return result;
+}
+
+std::vector<float> getFaceInferenceDataEDA_6pos6neg(FaceInferenceResults inferenceResult) {
+    std::vector<float> result;
+
+    result.push_back(inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[13 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[14 - 1].y - inferenceResult.faceBoundingBox.y);
+    result.push_back(inferenceResult.faceLandmarks[16 - 1].x - inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.faceLandmarks[17 - 1].x - inferenceResult.faceBoundingBox.x);
+    result.push_back(inferenceResult.headPoseAngles.y);
+    result.push_back(inferenceResult.headPoseAngles.z);
+    result.push_back(inferenceResult.leftEyeState);
+    result.push_back(inferenceResult.rightEyeState);
+    result.push_back(inferenceResult.leftEyeBoundingBox.y);
+    result.push_back(inferenceResult.rightEyeBoundingBox.x);
+    result.push_back(inferenceResult.gazeVector.z);
+
+    return result;
+}
+
+std::vector<float> getFaceInferenceDataEDA_FI(FaceInferenceResults inferenceResult) {
+    std::vector<float> result;
+
+    result.push_back(inferenceResult.headPoseAngles.y);
+    result.push_back(inferenceResult.headPoseAngles.z);
+    result.push_back(inferenceResult.gazeVector.x); 
+    result.push_back(inferenceResult.gazeVector.y);
+    result.push_back(inferenceResult.gazeVector.z);
+
+    return result;
+}
+
 std::vector<float> getFaceInferenceData(FaceInferenceResults inferenceResult) {
     return 
         //getFaceInferenceData6(inferenceResult);
-        getFaceInferenceData76(inferenceResult);
+        //getFaceInferenceDataEDA(inferenceResult);
+        //getFaceInferenceData76(inferenceResult);
+        //getFaceInferenceDataEDA_jasonTest(inferenceResult);
+        //getFaceInferenceDataEDA_6pos6neg(inferenceResult);
+        getFaceInferenceDataEDA_FI(inferenceResult);
 }
 
 void loadXGBoosterSingle() {
     // 載入模型
-    int res = XGBoosterLoadModel(booster, "..\\models\\XGB_model_76features2.json");
+    //int res = XGBoosterLoadModel(booster, "..\\models\\XGB_model_76features2.json");
+    //int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_model.json");
+    // 
+    //Jason
+    //int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_model_test.json");
+    //int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_6pos6neg_model.json");
+    
+    //feature imporment
+    int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_top5_model.json");
+    
     std::cout << "XGBoosterLoadModel: " << res << "\n";
 }
 
