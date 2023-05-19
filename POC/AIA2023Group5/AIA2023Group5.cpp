@@ -118,14 +118,14 @@ void updateStatusThread() {
         while (sceneStatus == 3 && isRunning)
         {
             std::unique_lock<std::mutex> locker(mu);
-            if (!gazeUtils->getResultWithAngles()) {
+            if (!gazeUtils->getResultWithXGBooster()) {
                 cv::putText(status, "Not concentrated", cv::Point(10, 40), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 255), 2); // 在圖像上添加警報文字
             }
             else {
                 status.setTo(cv::Scalar(0, 0, 0));
             }
 
-            if (!gazeUtils->getResultWithXGBooster()) {
+            if (!gazeUtils->getResultWithAngles()) {
                 cv::putText(status2, "Not concentrated", cv::Point(10, 40), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(255, 0, 0), 2); // 在圖像上添加警報文字
             }
             else {
@@ -281,10 +281,14 @@ int main()
 
         cvui::update();
         cvui::imshow(windowName,canvas);
-        if (waitKey(1) == 27) {
+        int key=waitKey(1);
+        if ( key== 27) {
             isRunning = false;
             Sleep(1000);
             break; 
+        }
+        else if (key=='s') {
+            gazeUtils->switchShowResultMaker();
         }
     }
 
