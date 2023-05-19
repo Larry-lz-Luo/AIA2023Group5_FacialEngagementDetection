@@ -17,3 +17,8 @@ AIA2023Group5/includes/openvino_toolkit_windows_2022.3.0/
 AIA2023Group5/temp/
 AIA2023Group5/models/intel/
 AIA2023Group5/models/public/
+POC/.vs/
+POC/includes/opencv/
+POC/includes/openvino_toolkit_windows_2022.3.0/
+POC/models/intel/
+POC/models/public/
