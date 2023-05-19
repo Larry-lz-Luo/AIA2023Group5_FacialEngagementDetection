@@ -1,5 +1,8 @@
 # 設定開發環境
+本專案主要使用 Visual Studio 進行編譯，請自行先安裝相關編譯環境。  
+https://visualstudio.microsoft.com/zh-hant/downloads/  
 
+以下為第三方環境建置說明:  
 Step 1: 
 * 下載 openvino toolkit 與 runtime 2022.3.0 並解壓縮至 專案目錄的 includes/openvino_toolkit_windows_2022.3.0 資料夾中
 * 下載 openCV4.7.0 並解壓縮至 專案目錄的 includes/opencv 資料夾中
@@ -67,7 +70,7 @@ omz_converter --list models.lst
 4. 按下取消則可以取消註冊的動作
   
     
-    
+
 
 # Scene2 錄製資料集說明
 
