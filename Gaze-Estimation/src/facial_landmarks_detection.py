@@ -20,9 +20,9 @@ class FacialLandmarksDetector:
         status = self.network.wait(0)
         if status == 0:
             outputs = self.network.get_output(0)
-            eye_boxes, eye_centers, preprocess_output_time = self._preprocess_output(outputs, face_image)
+            eye_boxes, eye_centers,normalized_landmarks, preprocess_output_time = self._preprocess_output(outputs, face_image)
             self.preprocess_time = preprocess_input_time + preprocess_output_time
-            return eye_boxes, eye_centers
+            return eye_boxes, eye_centers,normalized_landmarks
 
     def _preprocess_input(self, image):
         start_preprocess_time = time.time()
@@ -76,8 +76,10 @@ class FacialLandmarksDetector:
             #print(f'{xmin},  {xmax} - {ymin}, {ymax}')
             cv2.rectangle(image, (xmin, ymin), (xmax, ymax), color, 1)
 
-
+        for i in range(35):
+            normalized_landmarks[i][0] = int(w * normalized_landmarks[i][0])
+            normalized_landmarks[i][1] = int(h * normalized_landmarks[i][1])
         total_preprocess_time = time.time() - start_preprocess_time
-        return eye_boxes, eye_centers, total_preprocess_time
+        return eye_boxes, eye_centers,normalized_landmarks, total_preprocess_time
 
         

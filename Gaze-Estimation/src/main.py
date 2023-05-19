@@ -13,6 +13,13 @@ from facial_landmarks_detection import FacialLandmarksDetector
 from gaze_estimation import GazeEstimator
 from eye_state_estimation import EyeStateEstimator
 
+import pandas as pd
+import xgboost as xgb
+
+ENGAGEMENT_MODEL = 'C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\XGB_normalized_top5_model.json'
+CHOISEED_FEATURE = ['HeadPoseAngles_Y','HeadPoseAngles_Z','GazeVector_X','GazeVector_Y','GazeVector_Z']
+
+
 def build_argparser():
     """
     Parse command line arguments.
@@ -52,6 +59,46 @@ def build_argparser():
     parser.add_argument("--move_mouse", help="Optional. Move mouse based on gaze estimation",
                       default=False, action="store_true")
     return parser
+
+def FaceLandmarksPreprocessing(df_data, verbose = False):
+    for col_name in df_data.columns.to_list():
+        if col_name.find('FaceLandmarks_') == 0:
+            ##print(f"_X {col_name.find('_X')} , len(col_name): {len(col_name) - 2}")
+            #print(f"_Y {col_name.find('_Y')} , len(col_name): {len(col_name) - 2}")
+            #print(len(col_name) - 2)
+            if col_name.find('_X') == len(col_name) - 2:
+                df_data[col_name] = df_data[col_name] - df_data['FaceBoundingBox_X']
+                if verbose:
+                    print(f'Column {col_name} is subtracted by FaceBoundingBox_X.')
+            elif col_name.find('_Y') == len(col_name) - 2:
+                df_data[col_name] = df_data[col_name] - df_data['FaceBoundingBox_Y']
+                if verbose:
+                    print(f'Column {col_name} is subtracted by FaceBoundingBox_Y.')
+            else:
+#                 print(f'Ignore column {col_name}.')
+                pass
+        else:
+#             print(f'Ignore column {col_name}')
+            pass
+    return df_data
+
+def test_custom_model(df_train):
+    #df_train = FaceLandmarksPreprocessing(df_train)
+    #df_train = df_train.drop(labels = ['FaceBoundingBox_X'], axis = 1) 
+    #df_train = df_train.drop(labels = ['FaceBoundingBox_Y'], axis = 1) 
+
+    col_positive = CHOISEED_FEATURE
+
+    df_positive = df_train.loc[:, col_positive]
+    model_xgb = xgb.XGBRegressor()
+    
+    #model_xgb.load_model('C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\XGB_model_76features.json')
+
+    model_xgb.load_model(ENGAGEMENT_MODEL)
+    npa_test = df_positive.to_numpy()
+    #print(npa_test[0])
+    pred = model_xgb.predict(npa_test)
+    print(f'pred : {pred[0]}')
 
 def infer_on_stream(args):
     try:
@@ -106,22 +153,124 @@ def infer_on_stream(args):
             face_boxes = face_detector.predict(frame)
             for face_box in face_boxes:
                 face_image = get_crop_image(frame, face_box)
-                eye_boxes, eye_centers = facial_landmarks_detector.predict(face_image)
-                left_eye_image, right_eye_image = [get_crop_image(face_image, eye_box) for eye_box in eye_boxes]
-                head_pose_angles = head_pose_estimator.predict(face_image)
-                gaze_x, gaze_y = gaze_estimator.predict(right_eye_image, head_pose_angles, left_eye_image)
-                left_eye_state = eye_state_estimator.predict(left_eye_image, head_pose_angles)
-                right_eye_state = eye_state_estimator.predict(right_eye_image, head_pose_angles)
-                print(f'{left_eye_state} , {right_eye_state}')
-                draw_gaze_line(frame, face_box, eye_centers, gaze_x, gaze_y)
-                if args.show_input:
-                    cv2.imshow('im', frame)
-                if args.move_mouse:
-                    mouse_controller.move(gaze_x, gaze_y)
-                total_prepocess_time += face_detector.preprocess_time + facial_landmarks_detector.preprocess_time + \
-                    head_pose_estimator.preprocess_time + gaze_estimator.preprocess_time
-                break
+                if not face_image.size == 0: 
+                    eye_boxes, eye_centers,normalized_landmarks = facial_landmarks_detector.predict(face_image)
+                    left_eye_image, right_eye_image = [get_crop_image(face_image, eye_box) for eye_box in eye_boxes]
+                    head_pose_angles = head_pose_estimator.predict(face_image)
+                    gaze_x, gaze_y, gaze_z = gaze_estimator.predict(right_eye_image, head_pose_angles, left_eye_image)
+                    left_eye_state = eye_state_estimator.predict(left_eye_image, head_pose_angles)
+                    right_eye_state = eye_state_estimator.predict(right_eye_image, head_pose_angles)
+                    #print(f'{left_eye_state} , {right_eye_state}')
+                    if args.show_input:
+                        cv2.imshow('im', frame)
+                    if args.move_mouse:
+                        mouse_controller.move(gaze_x, gaze_y)
+                    total_prepocess_time += face_detector.preprocess_time + facial_landmarks_detector.preprocess_time + \
+                        head_pose_estimator.preprocess_time + gaze_estimator.preprocess_time
+                    break
 
+            df_train= pd.DataFrame(
+                {
+                    'FaceBoundingBox_X': face_box[0],
+                    'FaceBoundingBox_Y': face_box[1],
+                    'FaceLandmarks_1_X': normalized_landmarks[0][0],
+                    'FaceLandmarks_1_Y': normalized_landmarks[0][1],
+                    'FaceLandmarks_2_X': normalized_landmarks[1][0],
+                    'FaceLandmarks_2_Y': normalized_landmarks[1][1],
+                    'FaceLandmarks_3_X': normalized_landmarks[2][0],
+                    'FaceLandmarks_3_Y': normalized_landmarks[2][1],
+                    'FaceLandmarks_4_X': normalized_landmarks[3][0],
+                    'FaceLandmarks_4_Y': normalized_landmarks[3][1],
+                    'FaceLandmarks_5_X': normalized_landmarks[4][0],
+                    'FaceLandmarks_5_Y': normalized_landmarks[4][1],
+                    'FaceLandmarks_6_X': normalized_landmarks[5][0],
+                    'FaceLandmarks_6_Y': normalized_landmarks[5][1],
+                    'FaceLandmarks_7_X': normalized_landmarks[6][0],
+                    'FaceLandmarks_7_Y': normalized_landmarks[6][1],
+                    'FaceLandmarks_8_X': normalized_landmarks[7][0],
+                    'FaceLandmarks_8_Y': normalized_landmarks[7][1],
+                    'FaceLandmarks_9_X': normalized_landmarks[8][0],
+                    'FaceLandmarks_9_Y': normalized_landmarks[8][1],
+                    'FaceLandmarks_10_X': normalized_landmarks[9][0],
+                    'FaceLandmarks_10_Y': normalized_landmarks[9][1],
+                    
+                    'FaceLandmarks_11_X': normalized_landmarks[10][0],
+                    'FaceLandmarks_11_Y': normalized_landmarks[10][1],
+                    'FaceLandmarks_12_X': normalized_landmarks[11][0],
+                    'FaceLandmarks_12_Y': normalized_landmarks[11][1],
+                    'FaceLandmarks_13_X': normalized_landmarks[12][0],
+                    'FaceLandmarks_13_Y': normalized_landmarks[12][1],
+                    'FaceLandmarks_14_X': normalized_landmarks[13][0],
+                    'FaceLandmarks_14_Y': normalized_landmarks[13][1],
+                    'FaceLandmarks_15_X': normalized_landmarks[14][0],
+                    'FaceLandmarks_15_Y': normalized_landmarks[14][1],
+                    'FaceLandmarks_16_X': normalized_landmarks[15][0],
+                    'FaceLandmarks_16_Y': normalized_landmarks[15][1],
+                    'FaceLandmarks_17_X': normalized_landmarks[16][0],
+                    'FaceLandmarks_17_Y': normalized_landmarks[16][1],
+                    'FaceLandmarks_18_X': normalized_landmarks[17][0],
+                    'FaceLandmarks_18_Y': normalized_landmarks[17][1],
+                    'FaceLandmarks_19_X': normalized_landmarks[18][0],
+                    'FaceLandmarks_19_Y': normalized_landmarks[18][1],
+                    'FaceLandmarks_20_X': normalized_landmarks[19][0],
+                    'FaceLandmarks_20_Y': normalized_landmarks[19][1],
+
+                    'FaceLandmarks_21_X': normalized_landmarks[20][0],
+                    'FaceLandmarks_21_Y': normalized_landmarks[20][1],
+                    'FaceLandmarks_22_X': normalized_landmarks[21][0],
+                    'FaceLandmarks_22_Y': normalized_landmarks[21][1],
+                    'FaceLandmarks_23_X': normalized_landmarks[22][0],
+                    'FaceLandmarks_23_Y': normalized_landmarks[22][1],
+                    'FaceLandmarks_24_X': normalized_landmarks[23][0],
+                    'FaceLandmarks_24_Y': normalized_landmarks[23][1],
+                    'FaceLandmarks_25_X': normalized_landmarks[24][0],
+                    'FaceLandmarks_25_Y': normalized_landmarks[24][1],
+                    'FaceLandmarks_26_X': normalized_landmarks[25][0],
+                    'FaceLandmarks_26_Y': normalized_landmarks[25][1],
+                    'FaceLandmarks_27_X': normalized_landmarks[26][0],
+                    'FaceLandmarks_27_Y': normalized_landmarks[26][1],
+                    'FaceLandmarks_28_X': normalized_landmarks[27][0],
+                    'FaceLandmarks_28_Y': normalized_landmarks[27][1],
+                    'FaceLandmarks_29_X': normalized_landmarks[28][0],
+                    'FaceLandmarks_29_Y': normalized_landmarks[28][1],
+                    'FaceLandmarks_30_X': normalized_landmarks[29][0],
+                    'FaceLandmarks_30_Y': normalized_landmarks[29][1],
+
+                    'FaceLandmarks_31_X': normalized_landmarks[30][0],
+                    'FaceLandmarks_31_Y': normalized_landmarks[30][1],
+                    'FaceLandmarks_32_X': normalized_landmarks[31][0],
+                    'FaceLandmarks_32_Y': normalized_landmarks[31][1],
+                    'FaceLandmarks_33_X': normalized_landmarks[32][0],
+                    'FaceLandmarks_33_Y': normalized_landmarks[32][1],
+                    'FaceLandmarks_34_X': normalized_landmarks[33][0],
+                    'FaceLandmarks_34_Y': normalized_landmarks[33][1],
+                    'FaceLandmarks_35_X': normalized_landmarks[34][0],
+                    'FaceLandmarks_35_Y': normalized_landmarks[34][1],
+                    #'EyeState_Left': left_eye_state,
+                    #'EyeState_Right': right_eye_state,
+                    #'LeftEyeBoundingBox_Y': eye_boxes[0][1],
+                    #'RightEyeBoundingBox_X': eye_boxes[1][0],
+                    #'RightEyeBoundingBox_Y': eye_boxes[1][1],
+                    #'EyeLandmarks_2_Y': normalized_landmarks[1][1],
+                    #'LeftEyeMidPoint_Y': eye_centers[0][1],
+                    
+                    'HeadPoseAngles_X': head_pose_angles[0],
+                    'HeadPoseAngles_Y': head_pose_angles[1],
+                    'HeadPoseAngles_Z': head_pose_angles[2],
+
+                    'GazeVector_X': gaze_x,
+                    'GazeVector_Y': gaze_y,
+                    'GazeVector_Z': gaze_z
+                 })
+
+            ##for i in range(35):
+            #    df_train['FaceLandmarks_' + str(i +1) +'_X'] += int(df_train['FaceLandmarks_' + str(i +1) +'_X'])
+            #    df_train['FaceLandmarks_' + str(i +1) +'_Y'] += int(df_train['FaceLandmarks_' + str(i +1) +'_Y'])
+                
+
+            test_custom_model(df_train)
+
+            #df_train 
             if out_video is not None:
                 #out_video.write(frame)
                 cv2.imshow("DetectionResults", frame)
@@ -138,6 +287,7 @@ def infer_on_stream(args):
         log.info("Inference time:{:.1f}ms".format(1000* total_inference_time))
         log.info("Input/output preprocess time:{:.1f}ms".format(1000* total_prepocess_time))
         log.info("FPS:{}".format(fps))
+        #print("FPS:{}".format(fps))
 
         with open(os.path.join(output_directory, 'stats.txt'), 'w') as f:
             f.write(str(total_inference_time)+'\n')
@@ -154,17 +304,6 @@ def get_crop_image(image, box):
     xmin, ymin, xmax, ymax = box
     crop_image = image[ymin:ymax, xmin:xmax]
     return crop_image
-
-
-def draw_gaze_line(image, face_box, eye_centers, gaze_x, gaze_y):
-    xmin, ymin, xmax, ymax = face_box
-    for x, y in eye_centers:
-        start = (x+xmin, y+ymin)
-        end = (x+xmin+int(gaze_x*3000), y+ymin-int(gaze_y*3000))
-        beam_image = np.zeros(image.shape, np.uint8)
-        for t in range(20)[::-2]:
-            cv2.line(beam_image, start, end, (0, 0, 255-t*10), t*2)
-        image |= beam_image
 
 def main():
     args = build_argparser().parse_args()

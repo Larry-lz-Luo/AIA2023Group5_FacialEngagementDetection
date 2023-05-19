@@ -53,7 +53,10 @@ class GazeEstimator:
         gaze_vector_n = gaze_vector / np.linalg.norm(gaze_vector)
         vcos = math.cos(math.radians(roll))
         vsin = math.sin(math.radians(roll))
-        x =  gaze_vector_n[0]*vcos + gaze_vector_n[1]*vsin
-        y = -gaze_vector_n[0]*vsin + gaze_vector_n[1]*vcos
+        #x =  gaze_vector_n[0]*vcos + gaze_vector_n[1]*vsin
+        #y = -gaze_vector_n[0]*vsin + gaze_vector_n[1]*vcos
+        x = gaze_vector_n[0]
+        y = gaze_vector_n[1]
+        z = gaze_vector_n[2]
         total_preprocess_time = time.time() - start_preprocess_time
-        return [x, y], total_preprocess_time
+        return [x, y,z], total_preprocess_time
