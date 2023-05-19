@@ -137,7 +137,6 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     vertical = desktop.bottom;
 }
 
-
 int main()
 {
     std::cout << "Hello World!\n";
@@ -146,15 +145,15 @@ int main()
     slog::info << ov::get_openvino_version() << slog::endl;
 
     ov::Core core;
-    std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
+    std::string FLAGS_m_fd = "..\\models\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
         , FLAGS_d_fd = "GPU"
-        , FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
+        , FLAGS_m_hp = "..\\models\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
         , FLAGS_d_hp = "GPU"
-        , FLAGS_m_lm = "..\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
+        , FLAGS_m_lm = "..\\models\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
         , FLAGS_d_lm = "GPU"
-        , FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
+        , FLAGS_m_es = "..\\models\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
         , FLAGS_d_es = "GPU"
-        , FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
+        , FLAGS_m = "..\\models\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
         , FLAGS_d = "GPU";
 
     // Set up face detector and estimators
@@ -183,19 +182,12 @@ int main()
     auto startTime = std::chrono::steady_clock::now();
 
     cvui::init("MainSource");
-    //namedWindow("MainSource", cv::WINDOW_NORMAL);
     // Resize the Window
     cv::resizeWindow("MainSource", 640, 360);
     int horizontal = 0;
     int vertical = 0;
     GetDesktopResolution(horizontal, vertical);
     cv::moveWindow("MainSource", 0, 0);
-    // Init cvui and tell it to create a OpenCV window, i.e. cv::namedWindow(WINDOW_NAME).
-    //cvui::init("controlWindow");
-    //cv::Mat frameC = cv::Mat(cv::Size(200, 100), CV_8UC3);
-    //frameC = cv::Scalar(49, 52, 49);
-    // Render UI components to the frame
-    //cvui::text(frameC, 40, 40, "To exit this app click the button below or press Q (shortcut for the button below).");
 
     while (true)
     {
