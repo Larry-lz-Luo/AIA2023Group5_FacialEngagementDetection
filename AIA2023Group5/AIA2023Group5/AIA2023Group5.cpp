@@ -25,6 +25,8 @@ using namespace cv;
 #include "GazeUtils.h"
 GazeUtils *gazeUtils;
 
+#include "FaceRecognizerUtils.h"
+FaceRecognizerUtils* faceRecognizerUtils;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -43,20 +45,6 @@ void GetDesktopResolution(int& horizontal, int& vertical)
     vertical = desktop.bottom;
 }
 
-std::vector<std::string> stringSplit(std::string str, char delimiter)
-{
-    std::vector<std::string> tokens;
-    std::string token;
-    std::istringstream tokenStream(str);
-
-    while (getline(tokenStream, token, delimiter))
-    {
-        tokens.push_back(token);
-    }
-
-    return tokens;
-}
-
 std::string windowName = "AIA2023 Group5 Demo";
 std::string sizeString = "1280x720";
 cv::Size frameSize = stringToSize(sizeString);
@@ -64,88 +52,63 @@ cv::Size frameSize = stringToSize(sizeString);
 cv::Size downSize = cv::Size(640 / 3, 360 / 3);
 cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
 cv::Size reSize = cv::Size(640*1.5 , 360*1.5);
+
 cv::Mat status = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 cv::Mat status2 = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 std::unique_ptr<ImagesCapture> cap;
 
-Ptr<FaceRecognizerSF> faceRecognizer;
-double cosine_similar_thresh = 0.45;// 0.363;
-double l2norm_similar_thresh = 0.98;// 1.128;
-
-std::string FLAGS_m_fr = "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
+std::mutex mu;
 
 int sceneStatus = 0;
 cv::Mat cameraFrame;
 bool isRunning = false;
 
-std::string folder_path = "..\\faceDB\\";
-std::vector<std::string> ids;
-std::vector<std::string> names;
-std::vector<Mat> features;
-
-std::mutex mu;
-
-void loadDB() {
-
-    features.clear();
-    names.clear();
-    ids.clear();
-
-    std::vector<std::string> filenames;
-    glob(folder_path + "*.jpg", filenames, false);
-
-    for (size_t i = 0; i < filenames.size(); i++)
-    {
-        Mat image = imread(filenames[i]);
-        resize(image, image, reSize, INTER_LINEAR);
-
-        auto inferenceResults = gazeUtils->faceDetector->detect(image);
-
-        //find main face
-        int maxArea = 0;
-        int maxFace = -1;
-        for (int i = 0; i < inferenceResults.size(); i++) {
-
-            auto& inferenceResult = inferenceResults[i];
-            //cv::rectangle(image, inferenceResult.faceBoundingBox, Scalar(255, 0, 0), 2);
-            int area = inferenceResult.faceBoundingBox.width * inferenceResult.faceBoundingBox.height;
-            if (area > maxArea)
-            {
-                maxArea = area;
-                maxFace = i;
-            }
-        }
-
-        if (maxFace >= 0)
-        {
-            cv::Rect box = inferenceResults[maxFace].faceBoundingBox;
-            Mat aligned_face = image(box);
-            // Run feature extraction with given aligned_face
-            Mat feature;
-            faceRecognizer->feature(aligned_face, feature);
-            features.push_back(feature.clone());
-            std::vector<std::string> tokens = stringSplit(filenames[i].substr(folder_path.length()), '_');
-
-            ids.push_back(tokens[0]);
-            names.push_back(tokens[1]);
-        }
-
-    }
-}
-
 void Init() {
 
-    // Initialize FaceRecognizerSF
-    faceRecognizer = FaceRecognizerSF::create(FLAGS_m_fr, "");
+    faceRecognizerUtils = new FaceRecognizerUtils();
     gazeUtils = new GazeUtils();
 
     cap = openImagesCapture("0", false, read_type::efficient, 0, std::numeric_limits<size_t>::max(), frameSize);
+
+    //Alert UI Window
+    {
+        WNDCLASS wc = {};
+        wc.lpfnWndProc = WindowProc;
+        wc.hInstance = GetModuleHandle(NULL);
+        wc.lpszClassName = L"MyClass";
+        RegisterClass(&wc);
+        hwnd = CreateWindow(L"MyClass", L"User Name", WS_OVERLAPPEDWINDOW & ~WS_SYSMENU,
+            CW_USEDEFAULT, CW_USEDEFAULT, 330, 150,
+            NULL, NULL, GetModuleHandle(NULL), NULL);
+
+        HWND hTextBox = CreateWindowEx(WS_EX_CLIENTEDGE, L"EDIT", NULL,
+            WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
+            10, 20, 200, 30, hwnd, NULL, GetModuleHandle(NULL), NULL);
+
+        HWND hButton = CreateWindow(L"BUTTON", L"Register",
+            WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            210, 10, 80, 30, hwnd, (HMENU)1, GetModuleHandle(NULL), NULL);
+
+        HWND hButton2 = CreateWindow(L"BUTTON", L"Cancel", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+            210, 50, 80, 30, hwnd, (HMENU)2, GetModuleHandle(NULL), NULL);
+
+        std::thread([&]() {
+            MSG msg = {};
+        while (GetMessage(&msg, NULL, 0, 0))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+
+        }
+            }).detach();
+    }
     
 }
 
 void Release() {
 
     if (gazeUtils)delete gazeUtils;
+    if (faceRecognizerUtils)delete faceRecognizerUtils;
 
 }
 
@@ -177,7 +140,6 @@ void updateStatusThread() {
 void RunScene3() {
     cameraFrame = cap->read();
     sceneStatus = 4;
-    // 顯示視窗
     ShowWindow(hwnd, SW_SHOWDEFAULT);
     UpdateWindow(hwnd);
 }
@@ -187,71 +149,7 @@ cv::Mat RunScene1(cv::Mat canvas) {
     cv::Mat frame = cap->read();
     cv::resize(frame, frame, reSize, INTER_LINEAR);
 
-    auto inferenceResults = gazeUtils->faceDetector->detect(frame);
-
-    //find main face
-    int maxArea = 0;
-    int maxFace = -1;
-    for (int i = 0; i < inferenceResults.size(); i++) {
-
-        auto& inferenceResult = inferenceResults[i];
-        cv::rectangle(frame, inferenceResult.faceBoundingBox, Scalar(255, 0, 0), 2);
-        int area = inferenceResult.faceBoundingBox.width * inferenceResult.faceBoundingBox.height;
-        Mat feature_target;
-        Mat aligned_face = frame(inferenceResult.faceBoundingBox);
-        faceRecognizer->feature(aligned_face, feature_target);
-        for (int j = 0;j< features.size();j++) {
-
-            Mat feature = features[j];
-            double cos_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_COSINE);
-            double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
-
-            if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
-                cv::putText(frame, "ID: " + ids[j] + " Name: " + names[j], cv::Point(inferenceResult.faceBoundingBox.x, inferenceResult.faceBoundingBox.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-                break;
-            }
-            else
-            {
-
-            }
-        }
-        if (area > maxArea)
-        {
-            maxArea = area;
-            maxFace = i;
-        }
-    }
-
-    Mat aligned_face;
-    bool isMember = false;
-    int indexId = 0;
-    if (maxFace >= 0)
-    {
-        //has max face
-        cv::Rect box = inferenceResults[maxFace].faceBoundingBox;
-        Mat feature_target;
-        aligned_face = frame(box);
-        faceRecognizer->feature(aligned_face, feature_target);
-
-        for (Mat feature : features) {
-
-            double cos_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_COSINE);
-            double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
-
-            if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
-               // cv::putText(frame, "ID: " + ids[maxFace] + " Name: " + names[maxFace], cv::Point(box.x, box.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
-                isMember = true;
-                break;
-            }
-            else
-            {
-
-            }
-            indexId++;
-        }
-
-
-    }
+    frame=faceRecognizerUtils->recongnizer(frame, gazeUtils->faceDetector);
 
     int x = 50;
     int y = (canvas.rows / 2) - (reSize.height / 2);
@@ -259,9 +157,9 @@ cv::Mat RunScene1(cv::Mat canvas) {
 
     if (cvui::button(canvas, reSize.width+x,y, "LOGIN")) {
 
-        if (isMember) {
+        if (faceRecognizerUtils->isMember) {
             status.setTo(cv::Scalar(0, 0, 0));
-            cv::putText(status, "Welcome!! " + names[indexId]+" please wait.....", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 255, 0), 2); // 在圖像上添加警報文字
+            cv::putText(status, "Welcome!! " + faceRecognizerUtils->getCurrentMemberName() +" please wait.....", cv::Point(10, 50), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 255, 0), 2); // 在圖像上添加警報文字
             sceneStatus = 2;
         }
         else {
@@ -321,7 +219,7 @@ int main()
         if (sceneStatus == 0) {
             status.setTo(cv::Scalar(0, 0, 0));
             canvas.setTo(cv::Scalar(0, 0, 0));
-            loadDB();
+            faceRecognizerUtils->loadDB(reSize, gazeUtils->faceDetector);
             sceneStatus = 1;
         }
         else if (sceneStatus==1) {
@@ -356,14 +254,14 @@ int main()
                             }
                             else {
                         
-                                if (frame.empty()) { // 如果影片播放完畢，則從頭開始播放
+                                if (frame.empty()) {
                                     vid_capture.set(cv::CAP_PROP_POS_FRAMES, 0);
                                     continue;
                                 }
                             }
                             Sleep(33);
                         }
-                        vid_capture.release(); // 釋放資源
+                        vid_capture.release();
 
                         canvas.setTo(cv::Scalar(0, 0, 0));
                     }, vid_capture).detach();
@@ -400,11 +298,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         if (LOWORD(wParam) == 1)
         {
-            // 取得 Text Box 控制項中的文字
             TCHAR buffer[1024];
             GetWindowText(GetDlgItem(hwnd, 0), buffer, sizeof(buffer) / sizeof(buffer[0]));
 
-            // 輸出到控制台
             OutputDebugString(buffer);
             OutputDebugString(L"\n");
             std::wstring ws(buffer);
@@ -412,9 +308,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             if (name.size() > 0) {
 
-                bool result = cv::imwrite(folder_path + std::to_string(ids.size()) + "_" + name + "_.jpg", cameraFrame);
+                bool result = faceRecognizerUtils->saveToDB( name, cameraFrame);
 
-                // 檢查是否儲存成功
                 if (!result)
                 {
                     std::cerr << "Failed to save image!" << std::endl;

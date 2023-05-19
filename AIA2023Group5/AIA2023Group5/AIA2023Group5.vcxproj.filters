@@ -51,6 +51,9 @@
     <ClCompile Include="GazeUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FaceRecognizerUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp">
@@ -84,6 +87,9 @@
       <Filter>gazeEstimation</Filter>
     </ClInclude>
     <ClInclude Include="GazeUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FaceRecognizerUtils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
