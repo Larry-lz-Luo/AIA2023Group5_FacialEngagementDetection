@@ -1,10 +1,6 @@
-# Computer Pointer Controller
+# Refrence 
 
-The goal of this project is to use a gaze detection model to control the mouse pointer of the computer. This application uses the [Gaze Estimation](https://docs.openvinotoolkit.org/latest/_models_intel_gaze_estimation_adas_0002_description_gaze_estimation_adas_0002.html) model from the OpenVINO [Open Model Zoo](https://docs.openvinotoolkit.org/latest/_models_intel_index.html) with the [Intel Distribution of OpenVINO toolkit](https://software.intel.com/content/www/us/en/develop/tools/openvino-toolkit.html). It estimates the user's eyes and change the mouse pointer position accordingly. 
-
-The application draws the gaze lines like the laser beams. Just for fun. :-)
-
-![demo](images/demo.gif)
+This project is based on https://github.com/Dewalade1/computer-pointer-controller
 
 ## How it Works
 
@@ -12,27 +8,19 @@ The application takes the input from a webcam or a video file. It detects faces 
 
 To do this, the project uses the InferenceEngine API from Intel's OpenVINO Toolkit. The [Gaze Estimation](https://docs.openvinotoolkit.org/latest/_models_intel_gaze_estimation_adas_0002_description_gaze_estimation_adas_0002.html) model needs three inputs:
 
+* The face detect
 * The head pose
 * The left eye image
 * The right eye image
+* The gaze estimation
 
 So, the application uses three other OpenVINO models to get these inputs:
 
-* [Face Detection](https://docs.openvinotoolkit.org/latest/_models_intel_face_detection_adas_binary_0001_description_face_detection_adas_binary_0001.html).
-* [Head Pose Estimation](https://docs.openvinotoolkit.org/latest/_models_intel_head_pose_estimation_adas_0001_description_head_pose_estimation_adas_0001.html)
-* [Facial Landmarks Detection](https://docs.openvinotoolkit.org/latest/_models_intel_landmarks_regression_retail_0009_description_landmarks_regression_retail_0009.html)
-
-### The Pipeline
-
-The following shows the flow of data from the input, through the different models, to the mouse controller:
-
-![](images/pipeline.png)
-
-* Face detection model finds the locations of faces in an image.
-* Landmark detection model finds the key landmarks from the face in the image. The landmarks includes the locations of the left and right eyes.
-* Head pose estimation model finds the directions at which your head is tilted to.
-* Gaze estimation model takes in the cropped left and right eye, and the head pose angles to estimate the eye gaze direction.
-* The python framework *pyautogui* takes in the eye gaze to control the mouse pointer.
+* [Face Detection](https://docs.openvino.ai/latest/omz_models_model_face_detection_adas_0001.html).
+* [Head Pose Estimation](https://docs.openvino.ai/latest/omz_models_model_head_pose_estimation_adas_0001.html)
+* [Facial Landmarks Detection](https://docs.openvino.ai/latest/omz_models_model_facial_landmarks_35_adas_0002.html)
+* [Open Closed eye](https://docs.openvino.ai/latest/omz_models_model_open_closed_eye_0001.html)
+* [Gaze estimation](https://docs.openvino.ai/latest/omz_models_model_gaze_estimation_adas_0002.html)
 
 ## Project Set Up and Installation
 
@@ -46,9 +34,9 @@ The following shows the flow of data from the input, through the different model
 
 #### Software
 
-* Intel® Distribution of OpenVINO™ toolkit 2020.3 release
-* Python 3.7
-* OpenCV 3.4.2
+* Intel® Distribution of OpenVINO™ toolkit 2022.3 release
+* Python 3.9
+* OpenCV 4.5.5
 * pyautogui 0.9.48
 
 ### Set up development environment
@@ -118,7 +106,7 @@ To run it with a webcam:
 
 ```
 # Windows
-python src\main.py -mfd models\intel\face-detection-adas-binary-0001\FP32-INT1\face-detection-adas-binary-0001 -mhpe models\intel\head-pose-estimation-adas-0001\FP32\head-pose-estimation-adas-0001 -mfld models\intel\landmarks-regression-retail-0009\FP32\landmarks-regression-retail-0009 -mge models\intel\gaze-estimation-adas-0002\FP32\gaze-estimation-adas-0002 -o results -it cam
+python main.py -mfd "models/intel/face-detection-adas-0001/FP32/face-detection-adas-0001" -mhpe "models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001" -mfld "models/intel/facial-landmarks-35-adas-0002/FP32/facial-landmarks-35-adas-0002" -mge "models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002" -m_es "models/public/open-closed-eye-0001/open-closed-eye" -o "results" -it "cam"
 ```
 
 Find the result video under the `\results` directory. 
@@ -146,6 +134,9 @@ optional arguments:
   -mge MODEL_GAZE_ESTIMATION, --model_gaze_estimation MODEL_GAZE_ESTIMATION
                         Path to an xml file with a trained gaze estimation
                         model.
+  -m_es MODEL_EYE_STATE_ESTIMATION, --model_eye_state_estimation MODEL_EYE_STATE_ESTIMATION, 
+                        Path to an xml file with a trained open close eye 
+                        model.
   -it INPUT_TYPE, --input_type INPUT_TYPE
                         Specify 'video', 'image' or 'cam' (to work with
                         camera).
@@ -164,6 +155,8 @@ optional arguments:
                         Optional. Output inference results raw values showing
   --show_input          Optional. Input video showing
   --move_mouse          Optional. Move mouse based on gaze estimation
+
+
 ```
 
 ## Benchmarks
