@@ -12,13 +12,20 @@ from head_pose_estimation import HeadPoseEstimator
 from facial_landmarks_detection import FacialLandmarksDetector
 from gaze_estimation import GazeEstimator
 from eye_state_estimation import EyeStateEstimator
+import pickle
 
 import pandas as pd
 import xgboost as xgb
 
-ENGAGEMENT_MODEL = 'C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\XGB_normalized_top5_model.json'
-CHOISEED_FEATURE = ['HeadPoseAngles_Y','HeadPoseAngles_Z','GazeVector_X','GazeVector_Y','GazeVector_Z']
+import warnings
+warnings.simplefilter("ignore", UserWarning)
 
+
+
+ENGAGEMENT_MODEL = 'C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\XGB_normalized_top5_model_20230517.json'
+#ENGAGEMENT_MODEL = 'C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\GB_pickle_model.pkl'
+
+CHOISEED_FEATURE = ['HeadPoseAngles_Y','HeadPoseAngles_Z','GazeVector_X','GazeVector_Y','GazeVector_Z']
 
 def build_argparser():
     """
@@ -99,6 +106,27 @@ def test_custom_model(df_train):
     #print(npa_test[0])
     pred = model_xgb.predict(npa_test)
     print(f'pred : {pred[0]}')
+
+def test_custom_model_GradientBoosting(df_train):
+    #df_train = FaceLandmarksPreprocessing(df_train)
+    #df_train = df_train.drop(labels = ['FaceBoundingBox_X'], axis = 1) 
+    #df_train = df_train.drop(labels = ['FaceBoundingBox_Y'], axis = 1) 
+
+    col_positive = CHOISEED_FEATURE
+
+    df_positive = df_train.loc[:, col_positive]
+    with open(ENGAGEMENT_MODEL, 'rb') as f:
+        loaded_gb_model2 = pickle.load(f)
+    #loaded_gb_model2 = pickle.load()
+    
+    #model_xgb.load_model('C:\\Users\\qx50\\Documents\\_AIA\\Gaze openvino\\Gaze-Estimation\\src\\XGB_model_76features.json')
+
+    #model_xgb.load_model(ENGAGEMENT_MODEL)
+    npa_test = df_positive.to_numpy()
+    #print(npa_test[0])
+    pred = loaded_gb_model2.predict(npa_test)
+    print(f'pred : {pred[0]}')
+
 
 def infer_on_stream(args):
     try:
@@ -269,6 +297,7 @@ def infer_on_stream(args):
                 
 
             test_custom_model(df_train)
+            #test_custom_model_GradientBoosting(df_train)
 
             #df_train 
             if out_video is not None:
@@ -310,4 +339,6 @@ def main():
     infer_on_stream(args)
 
 if __name__ == '__main__':
+    
+    
     main()
