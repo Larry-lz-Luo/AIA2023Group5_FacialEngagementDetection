@@ -108,7 +108,7 @@ Ptr<FaceRecognizerSF> faceRecognizer;
 double cosine_similar_thresh = 0.45;// 0.363;
 double l2norm_similar_thresh = 0.98;// 1.128;
 
-int sceneStatus = 2;
+int sceneStatus = 0;
 cv::Mat cameraFrame;
 bool isRunning = false;
 
