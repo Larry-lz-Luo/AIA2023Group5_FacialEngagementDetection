@@ -53,7 +53,7 @@ cv::Size downSize = cv::Size(640 / 3, 360 / 3);
 cv::Size downSizeVideo = cv::Size(1280 - (640 / 3) - 10, 720 - (360 / 3));
 cv::Size reSize = cv::Size(640*1.5 , 360*1.5);
 
-cv::Mat status = cv::Mat(cv::Size(1000, 50), CV_8UC3);
+cv::Mat status = cv::Mat(cv::Size(1000, 70), CV_8UC3);
 cv::Mat status2 = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 std::unique_ptr<ImagesCapture> cap;
 

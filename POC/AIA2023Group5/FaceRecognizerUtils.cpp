@@ -81,7 +81,7 @@ cv::Mat FaceRecognizerUtils::recongnizer(cv::Mat frame, gaze_estimation::FaceDet
             double L2_score = faceRecognizer->match(feature, feature_target, FaceRecognizerSF::DisType::FR_NORM_L2);
 
             if (cos_score >= cosine_similar_thresh && L2_score <= l2norm_similar_thresh) {
-                cv::putText(frame, "ID: " + ids[j] + " Name: " + names[j], cv::Point(inferenceResult.faceBoundingBox.x, inferenceResult.faceBoundingBox.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(0, 0, 255), 2);
+                cv::putText(frame, "ID: " + ids[j] + " Name: " + names[j], cv::Point(inferenceResult.faceBoundingBox.x, inferenceResult.faceBoundingBox.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 0), 2);
                 break;
             }
             else
