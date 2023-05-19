@@ -110,6 +110,7 @@ xcopy "$(SolutionDir)models" "$(SolutionDir)$(Platform)\models\" /E /Y</Command>
     <ClCompile Include="..\includes\gazeEstimation\results_marker.cpp" />
     <ClCompile Include="..\includes\gazeEstimation\utils.cpp" />
     <ClCompile Include="AIA2023Group5.cpp" />
+    <ClCompile Include="GazeUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp" />
@@ -122,6 +123,7 @@ xcopy "$(SolutionDir)models" "$(SolutionDir)$(Platform)\models\" /E /Y</Command>
     <ClInclude Include="..\includes\gazeEstimation\landmarks_estimator.hpp" />
     <ClInclude Include="..\includes\gazeEstimation\results_marker.hpp" />
     <ClInclude Include="..\includes\gazeEstimation\utils.hpp" />
+    <ClInclude Include="GazeUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
