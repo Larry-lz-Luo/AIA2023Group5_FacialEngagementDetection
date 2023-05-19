@@ -48,6 +48,9 @@
     <ClCompile Include="..\includes\gazeEstimation\utils.cpp">
       <Filter>gazeEstimation</Filter>
     </ClCompile>
+    <ClCompile Include="GazeUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\includes\gazeEstimation\base_estimator.hpp">
@@ -79,6 +82,9 @@
     </ClInclude>
     <ClInclude Include="..\includes\gazeEstimation\utils.hpp">
       <Filter>gazeEstimation</Filter>
+    </ClInclude>
+    <ClInclude Include="GazeUtils.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
