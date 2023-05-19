@@ -49,12 +49,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)opencv\build\include;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)includes\opencv\build\include;$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470d.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvinod.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static_debug.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)includes\opencv\build\x64\vc16\lib\opencv_world470d.lib;$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvinod.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static_debug.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
@@ -75,24 +75,21 @@ xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)opencv\build\include;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)includes\ovCommon;$(SolutionDir)includes;$(SolutionDir)includes\opencv\build\include;$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>$(SolutionDir)opencv\build\x64\vc16\lib\opencv_world470.lib;$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvino.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)includes\opencv\build\x64\vc16\lib\opencv_world470.lib;$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\lib\intel64\$(Configuration)\openvino.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\utils.lib;$(SolutionDir)includes\ovlibs\intel64\$(Configuration)\gflags_nothreads_static.lib;pdh.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-copy "$(SolutionDir)opencv\build\x64\vc16\bin\opencv_world470.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
-if not exist "$(SolutionDir)$(Platform)\intel\" mkdir "$(SolutionDir)$(Platform)\intel\"
-if not exist "$(SolutionDir)$(Platform)\public\" mkdir "$(SolutionDir)$(Platform)\public\" 
-xcopy "$(SolutionDir)intel" "$(SolutionDir)$(Platform)\intel\"  /E /Y
-xcopy "$(SolutionDir)public" "$(SolutionDir)$(Platform)\public\" /E /Y</Command>
+      <Command>copy "$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\bin\intel64\$(Configuration)\*.xml" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)includes\openvino_toolkit_windows_2022.3.0\runtime\3rdparty\tbb\bin\tbb.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+copy "$(SolutionDir)includes\opencv\build\x64\vc16\bin\opencv_world470.dll" "$(SolutionDir)$(Platform)\$(Configuration)\"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
