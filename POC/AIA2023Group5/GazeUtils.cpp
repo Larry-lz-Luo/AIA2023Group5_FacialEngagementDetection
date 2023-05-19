@@ -68,7 +68,7 @@ cv::Mat GazeUtils::checkConcentrated(cv::Mat frame) {
 
         if (maxFace >= 0) {
             auto const& inferenceResult = inferenceResults[maxFace];
-            resultsMarker->mark(frame, inferenceResult);
+            if(showResultsMarker)resultsMarker->mark(frame, inferenceResult);
             checkGazeWithAngles(inferenceResult);
             checkGazeWithXGBooster(inferenceResult);
 

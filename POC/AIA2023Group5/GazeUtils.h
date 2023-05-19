@@ -43,6 +43,10 @@ public:
 
     bool getResultWithXGBooster();
 
+    void switchShowResultMaker() {
+        showResultsMarker = !showResultsMarker;
+    }
+
 private:
     std::string FLAGS_m_fd = "..\\models\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
         , FLAGS_d_fd = "GPU"
@@ -65,6 +69,7 @@ private:
     // Put pointers to all estimators in an array so that they could be processed uniformly in a loop
     std::vector< BaseEstimator*> estimators;
 
+    bool showResultsMarker = false;
     ResultsMarker *resultsMarker=new ResultsMarker(true, true, true, true, true);
 
     //XGBooster
