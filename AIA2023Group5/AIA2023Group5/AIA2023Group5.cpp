@@ -82,15 +82,15 @@ cv::Mat status = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 cv::Mat status2 = cv::Mat(cv::Size(1000, 50), CV_8UC3);
 std::unique_ptr<ImagesCapture> cap;
 
-std::string FLAGS_m_fd = "..\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
+std::string FLAGS_m_fd = "..\\models\\intel\\face-detection-retail-0004\\FP32\\face-detection-retail-0004.xml"
 , FLAGS_d_fd = "GPU"
-, FLAGS_m_hp = "..\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
+, FLAGS_m_hp = "..\\models\\intel\\head-pose-estimation-adas-0001\\FP32\\head-pose-estimation-adas-0001.xml"
 , FLAGS_d_hp = "GPU"
-, FLAGS_m_lm = "..\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
+, FLAGS_m_lm = "..\\models\\intel\\facial-landmarks-35-adas-0002\\FP32\\facial-landmarks-35-adas-0002.xml"
 , FLAGS_d_lm = "GPU"
-, FLAGS_m_es = "..\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
+, FLAGS_m_es = "..\\models\\public\\open-closed-eye-0001\\FP32\\open-closed-eye-0001.xml"
 , FLAGS_d_es = "GPU"
-, FLAGS_m = "..\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
+, FLAGS_m = "..\\models\\intel\\gaze-estimation-adas-0002\\FP32\\gaze-estimation-adas-0002.xml"
 , FLAGS_d = "GPU"
 , FLAGS_m_fr= "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
 ResultsMarker resultsMarker(true, true, true, true, true);
@@ -252,7 +252,10 @@ void loadXGBoosterSingle() {
     //int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_6pos6neg_model.json");
     
     //feature imporment
-    int res = XGBoosterLoadModel(booster, "..\\models\\XGB_normalized_top5_model.json");
+    int res = XGBoosterLoadModel(booster, 
+        //"..\\models\\XGB_normalized_top5_model.json"
+        "..\\models\\XGB_normalized_top5_model_20230517.json"
+    );
     
     std::cout << "XGBoosterLoadModel: " << res << "\n";
 }

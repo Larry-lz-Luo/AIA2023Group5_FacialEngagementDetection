@@ -1,3 +1,4 @@
+cd models
 pip install openvino-dev
 pip install --upgrade pip
 pip install

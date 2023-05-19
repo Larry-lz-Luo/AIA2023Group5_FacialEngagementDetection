@@ -12,3 +12,8 @@ AIA2023Group5/opencv-4.7.0-windows.exe
 AIA2023Group5/opencv/
 AIA2023Group5/Scene1/x64/
 AIA2023Group5/VideotTest/x64/
+AIA2023Group5/includes/opencv/
+AIA2023Group5/includes/openvino_toolkit_windows_2022.3.0/
+AIA2023Group5/temp/
+AIA2023Group5/models/intel/
+AIA2023Group5/models/public/
