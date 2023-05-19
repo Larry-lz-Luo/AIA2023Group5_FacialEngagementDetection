@@ -24,8 +24,8 @@ public:
 
 private:
 	Ptr<FaceRecognizerSF> faceRecognizer;
-	double cosine_similar_thresh = 0.45;// 0.363;
-	double l2norm_similar_thresh = 0.98;// 1.128;
+    double cosine_similar_thresh = 0.5;// 0.45;// 0.363;
+    double l2norm_similar_thresh = 0.90;// 0.98;// 1.128;
 
 	std::string FLAGS_m_fr = "..\\faceDB\\face_recognition_sface_2021dec_int8.onnx";
 

@@ -1,7 +1,11 @@
-# AIA2023_Facial_Recognition_POC
+# AIA2023Group5_Facial_Engagement_Detection
 
-目前有bug, 眼睛跑出CAM 會crash
+專案資料夾架構如下:  
 
-test script
+```
+├───ModelTraining --> 模型訓練相關
+├───POC           --> POC demo 專案 (Win32 C++)
+└───PythonSamples --> 其他相關python的測試
+```
 
-python src\main.py -mfd models\intel\face-detection-adas-0001\FP32\face-detection-adas-0001 -mhpe models\intel\head-pose-estimation-adas-0001\FP32\head-pose-estimation-adas-0001 -mfld models\intel\facial-landmarks-35-adas-0002\FP32\facial-landmarks-35-adas-0002 -mge models\intel\gaze-estimation-adas-0002\FP32\gaze-estimation-adas-0002 -m_es models/public/open-closed-eye-0001/open-closed-eye -o results -it cam
+各資料夾內各自有詳細說明。

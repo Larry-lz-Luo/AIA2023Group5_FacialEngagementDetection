@@ -119,9 +119,15 @@ cv::Mat FaceRecognizerUtils::recongnizer(cv::Mat frame, gaze_estimation::FaceDet
             }
             else
             {
-
+                
             }
             indexId++;
+        }
+
+        if (!isMember) 
+        {
+            cv::putText(frame, "Unknown", cv::Point(inferenceResults[maxFace].faceBoundingBox.x, inferenceResults[maxFace].faceBoundingBox.y - 20), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 0, 0), 2);
+
         }
     }
 
