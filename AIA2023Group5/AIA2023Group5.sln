@@ -7,8 +7,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AIA2023Group5", "AIA2023Gro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Scene2", "Scene2\Scene2.vcxproj", "{D4F9402B-9A6E-4C35-8636-813384BD2486}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideotTest", "VideotTest\VideotTest.vcxproj", "{DF5E7158-A0BD-4C74-9D26-793FFDBF272C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -23,10 +21,6 @@ Global
 		{D4F9402B-9A6E-4C35-8636-813384BD2486}.Debug|x64.Build.0 = Debug|x64
 		{D4F9402B-9A6E-4C35-8636-813384BD2486}.Release|x64.ActiveCfg = Release|x64
 		{D4F9402B-9A6E-4C35-8636-813384BD2486}.Release|x64.Build.0 = Release|x64
-		{DF5E7158-A0BD-4C74-9D26-793FFDBF272C}.Debug|x64.ActiveCfg = Debug|x64
-		{DF5E7158-A0BD-4C74-9D26-793FFDBF272C}.Debug|x64.Build.0 = Debug|x64
-		{DF5E7158-A0BD-4C74-9D26-793FFDBF272C}.Release|x64.ActiveCfg = Release|x64
-		{DF5E7158-A0BD-4C74-9D26-793FFDBF272C}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
