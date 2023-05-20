@@ -58,11 +58,10 @@ conda env create -f environment.yml
 Use OpenVINO's `model downloader` to download the models. From the main directory, run:
 
 ```
-#Linux
-python3 $INTEL_OPENVINO_DIR/deployment_tools/tools/model_downloader/downloader.py --list model.lst -o models
-
 #Windows
-python "%INTEL_OPENVINO_DIR%\deployment_tools\tools\model_downloader\downloader.py" --list model.lst -o models
+omz_downloader.exe --list .\model.lst
+
+mo --input_model <PATH_TO_MODEL>open-closed-eye.onnx --mean_values [127.0,127.0,127.0] --scale_values [255,255,255] --output 19
 ```
 
 ### Directory Structure
@@ -72,8 +71,6 @@ Find the source code for this project under the `/src` directory.
 ```
 .
 ├── bin
-│   └──  demo.mp4
-├── app.log
 ├── model.lst
 ├── models
 ├── images
@@ -94,14 +91,6 @@ Find the source code for this project under the `/src` directory.
 ## Demo
 
 Run the application with the demo video file. From the main directory:
-
-```
-# Windows
-python src\main.py -mfd models\intel\face-detection-adas-binary-0001\FP32-INT1\face-detection-adas-binary-0001 -mhpe models\intel\head-pose-estimation-adas-0001\FP32\head-pose-estimation-adas-0001 -mfld models\intel\landmarks-regression-retail-0009\FP32\landmarks-regression-retail-0009 -mge models\intel\gaze-estimation-adas-0002\FP32\gaze-estimation-adas-0002 -o results -i bin\demo.mp4 -it video --show_input --move_mouse
-
-../models/intel/face-detection-adas-binary-0001/FP32-INT1/face-detection-adas-binary-0001 ../models/intel/head-pose-estimation-adas-0001/FP32/head-pose-estimation-adas-0001 ../models/intel/landmarks-regression-retail-0009/FP32/landmarks-regression-retail-0009 ../models/intel/gaze-estimation-adas-0002/FP32/gaze-estimation-adas-0002 CPU video ../bin/demo.mp4 ../results/cpu
-```
-
 To run it with a webcam:
 
 ```
@@ -158,41 +147,3 @@ optional arguments:
 
 
 ```
-
-## Benchmarks
-I ran the model on CPU and GPU against models with following precisions:
-
-* FP32
-* FP16
-* FP16-INT8
-
-And I ran it with four benchmarks: model loading time, input/output preprocessing time, model inference time, and FPS. 
-
-The test results are:
-
-#### Inference time
-
-![inference_time](images/inference_time.png)
-
-#### Input/output preprocess time
-
-![io_preprocess_time](images/io_preprocess_time.png)
-
-#### FPS
-
-![fps](images/fps.png)
-
-#### Model loading time
-
-![model_loading_time](images/model_loading_time.png)
-
-## Results
-Models with higher precision usually take longer to run inference. The FP16-INT8 models follow this convention, they have a shorter inference time than FP16 models. 
-
-The inference time for FP16 is longer than FP32 - this is unexpected. My guess is that the time was spent on preprocessing input/output. As shown above, FP16 model has a much longer preprocess time than FP32. 
-
-Overall, GPU models take longer to load. This makes sense as there's startup time for OpenCL. When loading a model, OpenCL uses a just-in-time compiler to compile the code for whatever hardware is being used. This can lead to significantly longer model load time for GPU, when compared with CPU.
-
-## Future Works
-
-- Use Async Inference in the code, benchmark the results and explain its effects on power and performance of the project.
