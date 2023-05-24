@@ -1,9 +1,8 @@
 # Python Demo base on Google Mediapipe
 
-# **Learn more information about Mediapipe :** 
-https://developers.google.com/mediapipe
+### Learn more information about Mediapipe : https://developers.google.com/mediapipe
 
-#How to use
+## How to use
 
 ### step 1 : open terminal then set path to following path
 ```
