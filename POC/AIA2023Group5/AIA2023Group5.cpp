@@ -215,6 +215,8 @@ int main()
    
     while (isRunning)
     {
+        if (getWindowProperty(windowName, WND_PROP_VISIBLE) < 1)
+            isRunning = false;
         
         if (sceneStatus == 0) {
             status.setTo(cv::Scalar(0, 0, 0));
@@ -290,6 +292,10 @@ int main()
         else if (key=='s') {
             gazeUtils->switchShowResultMaker();
         }
+        else if(key==50){
+            break;
+        }
+        
     }
 
     Release();
