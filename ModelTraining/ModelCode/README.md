@@ -43,6 +43,12 @@ GazeVector_X, GazeVector_Y, GazeVector_Z</em>
 
 and the label is <em>RecordType</em>.
 
+## Training dataset ##
+
+For training our models, the input datasets are the csv files, with the columns of features + label, totally 104 columns (103 features + 1 label), in the order listed above.
+
+Put the training datasets in a specific path (or many paths), then update the code to read dataset in the path(s).
+
 ## Model Input Facial Features ##
 
 After the feature evaluation, we pick up 5 facial features for model, in order are:
